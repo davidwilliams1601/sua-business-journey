@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UKSUA Customer Journey Communications Map</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Lucide Icons as inline SVG components
+        const ChevronDown = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6"/>
+            </svg>
+        );
+
+        const ChevronUp = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m18 15-6-6-6 6"/>
+            </svg>
+        );
+
+        const Mail = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+        );
+
+        const Phone = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+        );
+
+        const MessageCircle = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+            </svg>
+        );
+
+        const Users = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        );
+
+        const Calendar = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                <line x1="16" x2="16" y1="2" y2="6"/>
+                <line x1="8" x2="8" y1="2" y2="6"/>
+                <line x1="3" x2="21" y1="10" y2="10"/>
+            </svg>
+        );
+
+        const CommsMap = () => {
+            const [expandedStage, setExpandedStage] = useState(null);
+            const [showDatePlanner, setShowDatePlanner] = useState(false);
+            const [selectedRegion, setSelectedRegion] = useState('South East');
+            const [milestones, setMilestones] = useState({
+                applicationDeadline: '',
+                shortlistAnnouncement: '',
+                nationalFinalDate: '',
+                regionalFinals: {
+                    'Wales': '',
+                    'Scotland': '',
+                    'Northern Ireland': '',
+                    'South East': '',
+                    'South West': '',
+                    'North West': '',
+                    'North East Yorkshire and Humber': '',
+                    'Midlands': '',
+                    'London': '',
+                    'East of England': ''
+                }
+            });
+            
+            const regions = [
+                'Wales',
+                'Scotland', 
+                'Northern Ireland',
+                'South East',
+                'South West',
+                'North West',
+                'North East Yorkshire and Humber',
+                'Midlands',
+                'London',
+                'East of England'
+            ];
+
+            // Calculate date based on timing string and reference date
+            const calculateDate = (timing, referenceDate, isAfter = false) => {
+                if (!referenceDate) return null;
+                
+                const date = new Date(referenceDate);
+                const timingLower = timing.toLowerCase();
+                
+                // Immediately
+                if (timingLower.includes('immediately')) {
+                    return date;
+                }
+                
+                // Next day / day after
+                if (timingLower.includes('next day') || timingLower === 'day after event') {
+                    date.setDate(date.getDate() + 1);
+                    return date;
+                }
+                
+                // Days before/after
+                const daysMatch = timingLower.match(/(\d+)\s*(?:hours|days?|week|weeks?|months?)/g);
+                if (daysMatch) {
+                    const firstMatch = daysMatch[0];
+                    const num = parseInt(firstMatch);
+                    
+                    if (firstMatch.includes('hour')) {
+                        const hours = isAfter ? num : -num;
+                        date.setHours(date.getHours() + hours);
+                    } else if (firstMatch.includes('day')) {
+                        const days = isAfter ? num : -num;
+                        date.setDate(date.getDate() + days);
+                    } else if (firstMatch.includes('week')) {
+                        const days = isAfter ? (num * 7) : -(num * 7);
+                        date.setDate(date.getDate() + days);
+                    } else if (firstMatch.includes('month')) {
+                        const months = isAfter ? num : -num;
+                        date.setMonth(date.getMonth() + months);
+                    }
+                    return date;
+                }
+                
+                // "Within X hours/days"
+                const withinMatch = timingLower.match(/within\s+(\d+)(?:-(\d+))?\s+(hours?|days?)/);
+                if (withinMatch) {
+                    const num = parseInt(withinMatch[1]);
+                    if (withinMatch[3].includes('hour')) {
+                        date.setHours(date.getHours() + num);
+                    } else {
+                        date.setDate(date.getDate() + num);
+                    }
+                    return date;
+                }
+                
+                return null;
+            };
+
+            const formatDate = (date) => {
+                if (!date) return '';
+                const d = new Date(date);
+                return d.toLocaleDateString('en-GB', { 
+                    weekday: 'short',
+                    day: 'numeric', 
+                    month: 'short', 
+                    year: 'numeric' 
+                });
+            };
+
+            const getCalculatedDate = (timing, stageNum) => {
+                // Determine which milestone to use as reference
+                let referenceDate = null;
+                let isAfter = false;
+                
+                if (stageNum <= 2) {
+                    // Before application deadline
+                    referenceDate = milestones.applicationDeadline;
+                } else if (stageNum === 3) {
+                    // After application deadline
+                    referenceDate = milestones.applicationDeadline;
+                    isAfter = true;
+                } else if (stageNum === 4) {
+                    // Around shortlist announcement
+                    if (timing.toLowerCase().includes('announcement day')) {
+                        referenceDate = milestones.shortlistAnnouncement;
+                    } else {
+                        referenceDate = milestones.shortlistAnnouncement;
+                        isAfter = true;
+                    }
+                } else if (stageNum >= 5 && stageNum <= 7) {
+                    // Regional final related - use selected region's date
+                    const regionalDate = milestones.regionalFinals[selectedRegion];
+                    if (timing.toLowerCase().includes('before')) {
+                        referenceDate = regionalDate;
+                    } else if (timing.toLowerCase().includes('after')) {
+                        referenceDate = regionalDate;
+                        isAfter = true;
+                    } else if (timing.toLowerCase().includes('day of') || timing.toLowerCase().includes('morning of')) {
+                        referenceDate = regionalDate;
+                    } else {
+                        referenceDate = regionalDate;
+                        isAfter = timing.toLowerCase().includes('after') || timing.toLowerCase().includes('next day');
+                    }
+                } else {
+                    // National final related
+                    if (timing.toLowerCase().includes('before')) {
+                        referenceDate = milestones.nationalFinalDate;
+                    } else if (timing.toLowerCase().includes('after')) {
+                        referenceDate = milestones.nationalFinalDate;
+                        isAfter = true;
+                    } else if (timing.toLowerCase().includes('day of') || timing.toLowerCase().includes('morning of')) {
+                        referenceDate = milestones.nationalFinalDate;
+                    } else {
+                        referenceDate = milestones.nationalFinalDate;
+                        isAfter = timing.toLowerCase().includes('after') || timing.toLowerCase().includes('next day');
+                    }
+                }
+                
+                const calculatedDate = calculateDate(timing, referenceDate, isAfter);
+                return calculatedDate ? formatDate(calculatedDate) : null;
+            };
+
+            const stages = [
+                {
+                    stage: 0,
+                    title: "PRE-JOURNEY: Awareness Generation",
+                    color: "bg-purple-100 border-purple-300",
+                    headerColor: "bg-purple-200",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Cold Email Outreach (Go Live Data)",
+                            timing: "Ongoing campaign",
+                            content: "Initial awareness email introducing UKSUA, value proposition, categories, success stories",
+                            goal: "Generate interest, drive to website/landing page"
+                        },
+                        {
+                            channel: "research",
+                            type: "Internal Research & Targeted Outreach",
+                            timing: "Ongoing",
+                            content: "Personalized emails to researched businesses that fit specific categories",
+                            goal: "Higher conversion rate from warm, targeted approach"
+                        },
+                        {
+                            channel: "social",
+                            type: "Social Media (Organic)",
+                            timing: "Regular posting",
+                            content: "Success stories, winner spotlights, deadline reminders, behind-the-scenes",
+                            goal: "Build awareness, credibility, engagement"
+                        },
+                        {
+                            channel: "social",
+                            type: "Social Media (Paid)",
+                            timing: "Campaign-based",
+                            content: "Targeted ads by sector/category, entry deadline campaigns, testimonial videos",
+                            goal: "Reach qualified businesses, drive entries"
+                        }
+                    ]
+                },
+                {
+                    stage: 1,
+                    title: "Stage 1: Find Out About Awards",
+                    color: "bg-blue-50 border-blue-200",
+                    headerColor: "bg-blue-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Welcome/Information Email",
+                            timing: "Immediately after website visit/form fill",
+                            content: "Welcome to UKSUA, categories overview, entry process, FAQs, key dates",
+                            goal: "Educate and encourage application start"
+                        },
+                        {
+                            channel: "email",
+                            type: "Nurture Sequence (if no action)",
+                            timing: "Day 3, 7, 14",
+                            content: "Why enter, category guidance, past winner stories, deadline reminders",
+                            goal: "Convert interest to application start"
+                        }
+                    ]
+                },
+                {
+                    stage: 2,
+                    title: "Stage 2: Application Started",
+                    color: "bg-green-50 border-green-200",
+                    headerColor: "bg-green-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Application Started Confirmation",
+                            timing: "Immediately",
+                            content: "Confirmation, saved draft info, tips for strong application, support contact",
+                            goal: "Reassure, provide guidance"
+                        },
+                        {
+                            channel: "email",
+                            type: "Reminder Sequence",
+                            timing: "21 days before deadline",
+                            content: "Friendly reminders to complete, tips, deadline countdown, offer help",
+                            goal: "Reduce drop-off, increase submission rate"
+                        },
+                        {
+                            channel: "email",
+                            type: "Reminder Sequence",
+                            timing: "14 days before deadline",
+                            content: "Friendly reminders to complete, tips, deadline countdown, offer help",
+                            goal: "Reduce drop-off, increase submission rate"
+                        },
+                        {
+                            channel: "email",
+                            type: "Reminder Sequence",
+                            timing: "7 days before deadline",
+                            content: "Friendly reminders to complete, tips, deadline countdown, offer help",
+                            goal: "Reduce drop-off, increase submission rate"
+                        },
+                        {
+                            channel: "whatsapp",
+                            type: "Quick Reminder (Optional)",
+                            timing: "48 hours before deadline",
+                            content: "Quick personal reminder about deadline, offer to help",
+                            goal: "Last chance to convert started to submitted"
+                        },
+                        {
+                            channel: "call",
+                            type: "Personal Outreach (High-Value Targets)",
+                            timing: "1 week before deadline",
+                            content: "Check in, offer support, answer questions, encourage submission",
+                            goal: "Personal touch for key businesses"
+                        }
+                    ],
+                    nurture: {
+                        title: "NURTURE: Didn't Submit Application",
+                        comms: [
+                            {
+                                channel: "email",
+                                type: "Post-Deadline Follow-up",
+                                timing: "1 week after deadline",
+                                content: "Sorry you missed it, invite to next year, stay in touch, join mailing list",
+                                goal: "Maintain relationship for future years"
+                            },
+                            {
+                                channel: "email",
+                                type: "Quarterly Check-in",
+                                timing: "Every 3 months until next awards",
+                                content: "Business growth tips, awards news, early bird notification for next year",
+                                goal: "Keep warm for next cycle"
+                            }
+                        ]
+                    }
+                },
+                {
+                    stage: 3,
+                    title: "Stage 3: Application Submitted",
+                    color: "bg-yellow-50 border-yellow-200",
+                    headerColor: "bg-yellow-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Submission Confirmation",
+                            timing: "Immediately",
+                            content: "Thank you, next steps, judging timeline, shortlist announcement date",
+                            goal: "Set expectations, build excitement"
+                        },
+                        {
+                            channel: "email",
+                            type: "Judging Update",
+                            timing: "Mid-judging period",
+                            content: "Judging is underway, thank you for patience, announcement coming soon",
+                            goal: "Maintain engagement during wait"
+                        },
+                        {
+                            channel: "social",
+                            type: "Social Shoutout (Optional)",
+                            timing: "Weekly batches",
+                            content: "Celebrate entries, tag businesses (with permission), build community",
+                            goal: "Public recognition, encourage ticket purchases later"
+                        }
+                    ]
+                },
+                {
+                    stage: 4,
+                    title: "Stage 4: Company Shortlisted",
+                    color: "bg-orange-50 border-orange-200",
+                    headerColor: "bg-orange-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Shortlist Announcement",
+                            timing: "Announcement day",
+                            content: "Congratulations! Shortlist details, regional final date/venue, ticket info, CTA to purchase",
+                            goal: "Celebrate achievement, drive ticket sales"
+                        },
+                        {
+                            channel: "call",
+                            type: "Personal Congratulations Call",
+                            timing: "Within 24-48 hours",
+                            content: "Congrats, answer questions, explain event format, encourage ticket purchase",
+                            goal: "Personal connection, increase ticket conversion"
+                        },
+                        {
+                            channel: "whatsapp",
+                            type: "Event Details & Reminder",
+                            timing: "Day 2-3 after announcement",
+                            content: "Event details, ticket link, early bird discount (if applicable), venue info",
+                            goal: "Quick access to booking info"
+                        },
+                        {
+                            channel: "email",
+                            type: "Ticket Purchase Reminder",
+                            timing: "3 days after announcement",
+                            content: "Don't miss out, event preview, networking opportunities, deadline for booking",
+                            goal: "Convert shortlist to ticket purchase"
+                        },
+                        {
+                            channel: "email",
+                            type: "Ticket Purchase Reminder",
+                            timing: "7 days after announcement",
+                            content: "Don't miss out, event preview, networking opportunities, deadline for booking",
+                            goal: "Convert shortlist to ticket purchase"
+                        },
+                        {
+                            channel: "email",
+                            type: "Ticket Purchase Reminder",
+                            timing: "14 days after announcement",
+                            content: "Don't miss out, event preview, networking opportunities, deadline for booking",
+                            goal: "Convert shortlist to ticket purchase"
+                        },
+                        {
+                            channel: "social",
+                            type: "Public Shortlist Announcement",
+                            timing: "Announcement day",
+                            content: "Congratulate all shortlisted businesses, tag them, build hype for event",
+                            goal: "Public recognition, social proof"
+                        }
+                    ],
+                    nurture: {
+                        title: "NURTURE: Shortlisted but Didn't Purchase Ticket",
+                        comms: [
+                            {
+                                channel: "call",
+                                type: "Personal Check-in",
+                                timing: "1 week after shortlist",
+                                content: "Understanding barriers, offer solutions, last chance to attend",
+                                goal: "Overcome objections, save the sale"
+                            },
+                            {
+                                channel: "email",
+                                type: "Post-Event Follow-up",
+                                timing: "After regional final",
+                                content: "Sorry you couldn't make it, share event highlights, encourage next year",
+                                goal: "Maintain relationship despite drop-off"
+                            }
+                        ]
+                    }
+                },
+                {
+                    stage: 5,
+                    title: "Stage 5: Ticket for Regional Final Purchased",
+                    color: "bg-pink-50 border-pink-200",
+                    headerColor: "bg-pink-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Ticket Confirmation",
+                            timing: "Immediately",
+                            content: "Booking confirmed, ticket details, event date/time/venue, what to expect",
+                            goal: "Confirm purchase, set expectations"
+                        },
+                        {
+                            channel: "email",
+                            type: "Pre-Event Build-up",
+                            timing: "4 weeks before",
+                            content: "Getting excited, agenda preview, dress code, parking/travel info, networking tips",
+                            goal: "Build anticipation, reduce no-shows"
+                        },
+                        {
+                            channel: "email",
+                            type: "Pre-Event Build-up",
+                            timing: "2 weeks before",
+                            content: "Getting excited, agenda preview, dress code, parking/travel info, networking tips",
+                            goal: "Build anticipation, reduce no-shows"
+                        },
+                        {
+                            channel: "email",
+                            type: "Pre-Event Build-up",
+                            timing: "1 week before",
+                            content: "Getting excited, agenda preview, dress code, parking/travel info, networking tips",
+                            goal: "Build anticipation, reduce no-shows"
+                        },
+                        {
+                            channel: "whatsapp",
+                            type: "Event Week Details",
+                            timing: "1 week before",
+                            content: "Final details, any last-minute updates, contact number for day-of questions",
+                            goal: "Ensure smooth attendance"
+                        },
+                        {
+                            channel: "email",
+                            type: "24-Hour Reminder",
+                            timing: "1 day before",
+                            content: "Tomorrow's the day! Final reminders, parking, arrival time, excitement message",
+                            goal: "Reduce no-shows, final logistics"
+                        },
+                        {
+                            channel: "whatsapp",
+                            type: "Day-of Message",
+                            timing: "Morning of event",
+                            content: "Good luck today! See you soon, last-minute details, contact for issues",
+                            goal: "Personal touch, handle last-minute issues"
+                        }
+                    ]
+                },
+                {
+                    stage: 6,
+                    title: "Stage 6: Regional Final Attended",
+                    color: "bg-indigo-50 border-indigo-200",
+                    headerColor: "bg-indigo-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Thank You Email",
+                            timing: "Next day",
+                            content: "Thank you for attending, event photos, winner announcement (if not at event), feedback survey",
+                            goal: "Maintain engagement, gather insights"
+                        },
+                        {
+                            channel: "social",
+                            type: "Event Recap Post",
+                            timing: "1-2 days after",
+                            content: "Event highlights, photos, winner announcements, tag attendees",
+                            goal: "Extend event buzz, public recognition"
+                        }
+                    ],
+                    nurture: {
+                        title: "NURTURE: Attended but Didn't Win Regional",
+                        comms: [
+                            {
+                                channel: "email",
+                                type: "Consolation & Encouragement",
+                                timing: "2-3 days after",
+                                content: "Recognize achievement of being shortlisted, celebrate participation, encourage re-entry next year",
+                                goal: "Maintain positive relationship"
+                            },
+                            {
+                                channel: "email",
+                                type: "Next Year Early Bird",
+                                timing: "6 months before next awards",
+                                content: "Early notification, special early bird rate, category tips based on previous entry",
+                                goal: "Re-engage for next cycle"
+                            },
+                            {
+                                channel: "email",
+                                type: "Quarterly Newsletter",
+                                timing: "Every 3 months",
+                                content: "Awards news, business tips, community building, stay connected",
+                                goal: "Nurture long-term relationship"
+                            }
+                        ]
+                    }
+                },
+                {
+                    stage: 7,
+                    title: "Stage 7: Regional Final Won",
+                    color: "bg-yellow-50 border-yellow-200",
+                    headerColor: "bg-yellow-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Winner Announcement & Congratulations",
+                            timing: "Immediately after event",
+                            content: "Huge congratulations! Winner certificate/trophy info, national final invitation, ticket purchase details",
+                            goal: "Celebrate win, drive national ticket purchase"
+                        },
+                        {
+                            channel: "call",
+                            type: "Personal Congratulations Call",
+                            timing: "Within 24 hours",
+                            content: "Personal congrats from team, explain national final process, encourage ticket purchase, answer questions",
+                            goal: "Build relationship, increase national attendance"
+                        },
+                        {
+                            channel: "whatsapp",
+                            type: "Winner's WhatsApp Group Invite (Optional)",
+                            timing: "2 days after",
+                            content: "Invite to exclusive regional winners group for national final updates and networking",
+                            goal: "Build community, maintain engagement"
+                        },
+                        {
+                            channel: "email",
+                            type: "Marketing Assets & PR Support",
+                            timing: "3-5 days after",
+                            content: "Winner logo, press release template, social media graphics, how to promote win",
+                            goal: "Help them celebrate, amplify reach"
+                        },
+                        {
+                            channel: "social",
+                            type: "Winner Spotlight",
+                            timing: "1 week after",
+                            content: "Feature winner with photo, story, achievement, tag business",
+                            goal: "Public recognition, social proof"
+                        },
+                        {
+                            channel: "email",
+                            type: "National Final Ticket Reminder",
+                            timing: "1 week after regional",
+                            content: "Don't miss national final, early bird pricing, event details, hotel info, networking opportunity",
+                            goal: "Convert to national final attendance"
+                        },
+                        {
+                            channel: "email",
+                            type: "National Final Ticket Reminder",
+                            timing: "2 weeks after regional",
+                            content: "Don't miss national final, early bird pricing, event details, hotel info, networking opportunity",
+                            goal: "Convert to national final attendance"
+                        },
+                        {
+                            channel: "email",
+                            type: "National Final Ticket Reminder",
+                            timing: "3 weeks after regional",
+                            content: "Don't miss national final, early bird pricing, event details, hotel info, networking opportunity",
+                            goal: "Convert to national final attendance"
+                        }
+                    ],
+                    nurture: {
+                        title: "NURTURE: Won Regional but Didn't Purchase National Ticket",
+                        comms: [
+                            {
+                                channel: "call",
+                                type: "Personal Outreach",
+                                timing: "2 weeks before national",
+                                content: "Check in on why not attending, overcome barriers, last chance offer",
+                                goal: "Understand and address objections"
+                            },
+                            {
+                                channel: "email",
+                                type: "Post-National Final Follow-up",
+                                timing: "After national final",
+                                content: "Sorry you couldn't attend, celebrate their regional win, share national highlights, stay in touch",
+                                goal: "Maintain positive relationship despite drop-off"
+                            }
+                        ]
+                    }
+                },
+                {
+                    stage: 8,
+                    title: "Stage 8: National Final Ticket Purchased",
+                    color: "bg-red-50 border-red-200",
+                    headerColor: "bg-red-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Ticket Confirmation",
+                            timing: "Immediately",
+                            content: "Booking confirmed, national final details, VIP treatment info, what to expect",
+                            goal: "Confirm purchase, build excitement"
+                        },
+                        {
+                            channel: "email",
+                            type: "Pre-Event Build-up",
+                            timing: "6 weeks before",
+                            content: "Event preview, agenda, guest speakers, accommodation suggestions, travel info, dress code, who else is attending",
+                            goal: "Build anticipation, logistics support"
+                        },
+                        {
+                            channel: "email",
+                            type: "Pre-Event Build-up",
+                            timing: "4 weeks before",
+                            content: "Event preview, agenda, guest speakers, accommodation suggestions, travel info, dress code, who else is attending",
+                            goal: "Build anticipation, logistics support"
+                        },
+                        {
+                            channel: "email",
+                            type: "Pre-Event Build-up",
+                            timing: "2 weeks before",
+                            content: "Event preview, agenda, guest speakers, accommodation suggestions, travel info, dress code, who else is attending",
+                            goal: "Build anticipation, logistics support"
+                        },
+                        {
+                            channel: "email",
+                            type: "Pre-Event Build-up",
+                            timing: "1 week before",
+                            content: "Event preview, agenda, guest speakers, accommodation suggestions, travel info, dress code, who else is attending",
+                            goal: "Build anticipation, logistics support"
+                        },
+                        {
+                            channel: "whatsapp",
+                            type: "National Final Week Details",
+                            timing: "1 week before",
+                            content: "Final event details, any updates, exclusive pre-event networking opportunity (if applicable)",
+                            goal: "VIP treatment, final logistics"
+                        },
+                        {
+                            channel: "email",
+                            type: "48-Hour Countdown",
+                            timing: "2 days before",
+                            content: "Almost here! Final details, what to bring, parking/venue access, meet the team",
+                            goal: "Excitement building, reduce no-shows"
+                        },
+                        {
+                            channel: "whatsapp",
+                            type: "Day-of VIP Message",
+                            timing: "Morning of event",
+                            content: "Today's the big day! Good luck, we're excited to celebrate with you, VIP entrance info",
+                            goal: "Personal touch, VIP experience"
+                        }
+                    ]
+                },
+                {
+                    stage: 9,
+                    title: "Stage 9: National Final Event Attended",
+                    color: "bg-purple-50 border-purple-200",
+                    headerColor: "bg-purple-100",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Thank You & Event Recap",
+                            timing: "Next day",
+                            content: "Thank you for attending, celebration of all finalists, event photos/video, feedback survey",
+                            goal: "Gratitude, gather insights"
+                        },
+                        {
+                            channel: "social",
+                            type: "National Final Recap",
+                            timing: "1-2 days after",
+                            content: "Event highlights reel, all finalists recognition, winner announcements, photo gallery",
+                            goal: "Maximize event impact, public recognition"
+                        }
+                    ],
+                    nurture: {
+                        title: "NURTURE: Attended National but Didn't Win",
+                        comms: [
+                            {
+                                channel: "email",
+                                type: "Recognition & Appreciation",
+                                timing: "2-3 days after",
+                                content: "Recognize incredible achievement of reaching national final, celebrate their journey, feedback opportunity",
+                                goal: "Positive sentiment, maintain relationship"
+                            },
+                            {
+                                channel: "email",
+                                type: "Marketing Assets",
+                                timing: "1 week after",
+                                content: "National finalist logo, certificate, social graphics to promote achievement",
+                                goal: "Help them celebrate finalist status"
+                            },
+                            {
+                                channel: "email",
+                                type: "Next Year Champion Invitation",
+                                timing: "6 months before next awards",
+                                content: "You came so close! Early invite to enter again, VIP support, category tips",
+                                goal: "Re-engage high-quality entrants"
+                            },
+                            {
+                                channel: "email",
+                                type: "Quarterly Newsletter",
+                                timing: "Every 3 months",
+                                content: "Awards community updates, success stories, business growth content",
+                                goal: "Long-term relationship nurture"
+                            }
+                        ]
+                    }
+                },
+                {
+                    stage: 10,
+                    title: "Stage 10: UK SUA Category Winner",
+                    color: "bg-yellow-100 border-yellow-300",
+                    headerColor: "bg-yellow-200",
+                    comms: [
+                        {
+                            channel: "email",
+                            type: "Winner Announcement & Celebration",
+                            timing: "Immediately after event",
+                            content: "CONGRATULATIONS NATIONAL WINNER! Trophy/certificate info, winner benefits, next steps",
+                            goal: "Celebrate ultimate achievement"
+                        },
+                        {
+                            channel: "call",
+                            type: "Personal Celebration Call",
+                            timing: "Within 24 hours",
+                            content: "Personal congratulations from senior team, discuss winner benefits, PR opportunities, stay in touch",
+                            goal: "VIP relationship building"
+                        },
+                        {
+                            channel: "email",
+                            type: "Winner PR Package",
+                            timing: "3-5 days after",
+                            content: "Professional photography, press release, winner logo, social media assets, PR guide, case study opportunity",
+                            goal: "Maximize their win, co-marketing"
+                        },
+                        {
+                            channel: "social",
+                            type: "Winner Spotlight Campaign",
+                            timing: "Ongoing for 2-4 weeks",
+                            content: "Multiple posts celebrating winner, their story, achievement, behind-the-scenes, video interview",
+                            goal: "Maximum visibility for winner and awards"
+                        },
+                        {
+                            channel: "email",
+                            type: "Winner Benefits & Ongoing Partnership",
+                            timing: "2 weeks after",
+                            content: "How to maximize win, speaking opportunities, case study participation, ambassador program (if exists)",
+                            goal: "Long-term partnership"
+                        },
+                        {
+                            channel: "email",
+                            type: "Alumni Engagement",
+                            timing: "Quarterly ongoing",
+                            content: "Winner alumni updates, exclusive networking, speaking opportunities, next year's judging panel invite",
+                            goal: "Maintain relationship, build awards credibility"
+                        },
+                        {
+                            channel: "email",
+                            type: "Next Year Invitation",
+                            timing: "When next awards open",
+                            content: "Defend your title or enter different category, VIP early entry, special recognition as previous winner",
+                            goal: "Re-engage for future years"
+                        }
+                    ]
+                }
+            ];
+
+            const getChannelIcon = (channel) => {
+                switch(channel) {
+                    case 'email': return <Mail className="w-4 h-4" />;
+                    case 'call': return <Phone className="w-4 h-4" />;
+                    case 'whatsapp': return <MessageCircle className="w-4 h-4" />;
+                    case 'social': return <Users className="w-4 h-4" />;
+                    case 'research': return <Users className="w-4 h-4" />;
+                    default: return null;
+                }
+            };
+
+            const getChannelColor = (channel) => {
+                switch(channel) {
+                    case 'email': return 'bg-blue-100 text-blue-800';
+                    case 'call': return 'bg-green-100 text-green-800';
+                    case 'whatsapp': return 'bg-emerald-100 text-emerald-800';
+                    case 'social': return 'bg-purple-100 text-purple-800';
+                    case 'research': return 'bg-orange-100 text-orange-800';
+                    default: return 'bg-gray-100 text-gray-800';
+                }
+            };
+
+            return (
+                <div className="w-full max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">UK StartUp Awards (UKSUA)</h1>
+                        <h2 className="text-xl text-gray-700 mb-4">Customer Journey Communications Map</h2>
+                        
+                        {/* Date Planner Toggle */}
+                        <button
+                            onClick={() => setShowDatePlanner(!showDatePlanner)}
+                            className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                        >
+                            <Calendar className="w-5 h-5" />
+                            {showDatePlanner ? 'Hide' : 'Show'} Date Planner
+                        </button>
+
+                        {/* Region Selector */}
+                        <div className="mb-4 flex items-center gap-3">
+                            <label className="text-sm font-medium text-gray-700">
+                                View Dates For Region:
+                            </label>
+                            <select
+                                value={selectedRegion}
+                                onChange={(e) => setSelectedRegion(e.target.value)}
+                                className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                            >
+                                {regions.map(region => (
+                                    <option key={region} value={region}>{region}</option>
+                                ))}
+                            </select>
+                            {milestones.regionalFinals[selectedRegion] && (
+                                <span className="text-sm text-gray-600">
+                                    Regional Final: <strong>{formatDate(milestones.regionalFinals[selectedRegion])}</strong>
+                                </span>
+                            )}
+                        </div>
+
+{/* Date Planner Panel */}
+                        {showDatePlanner && (
+                            <div className="mb-6 p-6 bg-white border-2 border-indigo-300 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-bold text-gray-900 mb-6">📅 Set Key Milestone Dates</h3>
+                                
+                                {/* Global Dates */}
+                                <div className="mb-8 pb-6 border-b-2 border-gray-200">
+                                    <h4 className="font-bold text-gray-900 mb-4 text-base">🌍 Global Dates</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Application Deadline
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={milestones.applicationDeadline}
+                                                onChange={(e) => setMilestones({...milestones, applicationDeadline: e.target.value})}
+                                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Shortlist Announcement Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={milestones.shortlistAnnouncement}
+                                                onChange={(e) => setMilestones({...milestones, shortlistAnnouncement: e.target.value})}
+                                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                National Final Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={milestones.nationalFinalDate}
+                                                onChange={(e) => setMilestones({...milestones, nationalFinalDate: e.target.value})}
+                                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Regional Finals */}
+                                <div>
+                                    <h4 className="font-bold text-gray-900 mb-4 text-base">🏆 Regional Final Dates (All 10 Regions)</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {regions.map(region => (
+                                            <div key={region} className="bg-gray-50 p-3 rounded-lg">
+                                                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                                                    {region}
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    value={milestones.regionalFinals[region] || ''}
+                                                    onChange={(e) => setMilestones({
+                                                        ...milestones, 
+                                                        regionalFinals: {
+                                                            ...milestones.regionalFinals,
+                                                            [region]: e.target.value
+                                                        }
+                                                    })}
+                                                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <p className="mt-6 text-sm text-indigo-700 bg-indigo-50 p-3 rounded-lg">
+                                    ℹ️ <strong>Tip:</strong> Set your key dates above and all communication touchpoints will be automatically calculated. Use the region selector below to view timeline for each specific regional final.
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-3 mt-4">
+                            <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                                <Mail className="w-4 h-4" />
+                                <span>Email</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                                <Phone className="w-4 h-4" />
+                                <span>Call</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm">
+                                <MessageCircle className="w-4 h-4" />
+                                <span>WhatsApp</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                                <Users className="w-4 h-4" />
+                                <span>Social Media</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                                <Users className="w-4 h-4" />
+                                <span>Research/Outreach</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        {stages.map((stageData) => (
+                            <div key={stageData.stage} className={`border-2 rounded-lg overflow-hidden ${stageData.color}`}>
+                                <button
+                                    onClick={() => setExpandedStage(expandedStage === stageData.stage ? null : stageData.stage)}
+                                    className={`w-full px-6 py-4 flex items-center justify-between ${stageData.headerColor} hover:opacity-90 transition-opacity`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="font-bold text-lg">{stageData.title}</span>
+                                        <span className="text-sm text-gray-600">({stageData.comms.length} touchpoints)</span>
+                                    </div>
+                                    {expandedStage === stageData.stage ? <ChevronUp /> : <ChevronDown />}
+                                </button>
+                                
+                                {expandedStage === stageData.stage && (
+                                    <div className="p-6 bg-white">
+                                        <div className="space-y-4">
+                                            {stageData.comms.map((comm, idx) => {
+                                                const calculatedDate = getCalculatedDate(comm.timing, stageData.stage);
+                                                return (
+                                                    <div key={idx} className="border-l-4 border-gray-300 pl-4 py-2">
+                                                        <div className="flex items-start gap-3 mb-2">
+                                                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${getChannelColor(comm.channel)}`}>
+                                                                {getChannelIcon(comm.channel)}
+                                                                {comm.channel.toUpperCase()}
+                                                            </span>
+                                                            <div className="flex-1">
+                                                                <h4 className="font-semibold text-gray-900">{comm.type}</h4>
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <p className="text-sm text-gray-600 italic">{comm.timing}</p>
+                                                                    {calculatedDate && (
+                                                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs font-medium">
+                                                                            <Calendar className="w-3 h-3" />
+                                                                            {calculatedDate}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="ml-0 mt-2">
+                                                            <p className="text-sm text-gray-700 mb-1"><strong>Content:</strong> {comm.content}</p>
+                                                            <p className="text-sm text-gray-700"><strong>Goal:</strong> {comm.goal}</p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {stageData.nurture && (
+                                            <div className="mt-6 pt-6 border-t-2 border-dashed border-red-300 bg-red-50 p-4 rounded">
+                                                <h3 className="font-bold text-red-800 mb-4 flex items-center gap-2">
+                                                    <span className="text-lg">⚠️</span>
+                                                    {stageData.nurture.title}
+                                                </h3>
+                                                <div className="space-y-4">
+                                                    {stageData.nurture.comms.map((comm, idx) => {
+                                                        const calculatedDate = getCalculatedDate(comm.timing, stageData.stage);
+                                                        return (
+                                                            <div key={idx} className="border-l-4 border-red-400 pl-4 py-2">
+                                                                <div className="flex items-start gap-3 mb-2">
+                                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${getChannelColor(comm.channel)}`}>
+                                                                        {getChannelIcon(comm.channel)}
+                                                                        {comm.channel.toUpperCase()}
+                                                                    </span>
+                                                                    <div className="flex-1">
+                                                                        <h4 className="font-semibold text-gray-900">{comm.type}</h4>
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <p className="text-sm text-gray-600 italic">{comm.timing}</p>
+                                                                            {calculatedDate && (
+                                                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs font-medium">
+                                                                                    <Calendar className="w-3 h-3" />
+                                                                                    {calculatedDate}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="ml-0 mt-2">
+                                                                    <p className="text-sm text-gray-700 mb-1"><strong>Content:</strong> {comm.content}</p>
+                                                                    <p className="text-sm text-gray-700"><strong>Goal:</strong> {comm.goal}</p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-8 p-6 bg-white border-2 border-gray-300 rounded-lg">
+                        <h3 className="font-bold text-lg mb-4">Key Implementation Notes:</h3>
+                        <ul className="space-y-2 text-sm text-gray-700">
+                            <li className="flex gap-2">
+                                <span className="font-bold">•</span>
+                                <span><strong>Automation:</strong> Most emails can be automated via your CRM/email platform with triggers based on stage progression</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="font-bold">•</span>
+                                <span><strong>Personalization:</strong> Use merge fields for business name, category, regional location, etc.</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="font-bold">•</span>
+                                <span><strong>Calls:</strong> Schedule in CRM for sales/relationship team to execute at key moments</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="font-bold">•</span>
+                                <span><strong>WhatsApp:</strong> Consider WhatsApp Business API for automated messages or manual for VIP touch</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="font-bold">•</span>
+                                <span><strong>Social Media:</strong> Schedule content calendar around key dates, use scheduling tools</span>
+                            </li>
+                            <li className="flex gap-2">
+                                <span className="font-bold">•</span>
+                                <span><strong>Nurture Sequences:</strong> Critical for maximizing lifetime value - don't ignore drop-offs!</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<CommsMap />);
+    </script>
+</body>
+</html>
