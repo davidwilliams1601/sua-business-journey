@@ -1,973 +1,729 @@
-import React, { useState, useMemo } from 'react';
-import { Calendar, Filter, Download, ChevronLeft, ChevronRight, Mail, Phone, MessageCircle, Users } from 'lucide-react';
-
-const UnifiedCalendar = () => {
-  const [view, setView] = useState('month'); // month, week, day, agenda
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [filters, setFilters] = useState({
-    awards: { UKSUA: true, GBEA: true, GBIA: true, FGI: true },
-    channels: { email: true, call: true, whatsapp: true, social: true, research: true },
-    regions: {
-      'Wales': true, 'Scotland': true, 'Northern Ireland': true,
-      'South East': true, 'South West': true, 'North West': true,
-      'North East Yorkshire and Humber': true, 'Midlands': true,
-      'London': true, 'East of England': true
-    }
-  });
-  const [showFilters, setShowFilters] = useState(false);
-  const [showDateSetter, setShowDateSetter] = useState(true);
-  
-  // Date storage for each award
-  const [awardDates, setAwardDates] = useState({
-    UKSUA: {
-      applicationDeadline: '2025-03-31',
-      shortlistAnnouncement: '2025-05-15',
-      nationalFinalDate: '2025-11-20',
-      regionalFinals: {
-        'Wales': '2025-09-10',
-        'Scotland': '2025-09-12',
-        'Northern Ireland': '2025-09-15',
-        'South East': '2025-09-17',
-        'South West': '2025-09-19',
-        'North West': '2025-09-22',
-        'North East Yorkshire and Humber': '2025-09-24',
-        'Midlands': '2025-09-26',
-        'London': '2025-09-29',
-        'East of England': '2025-10-01'
-      }
-    },
-    GBEA: {
-      applicationDeadline: '2025-04-30',
-      shortlistAnnouncement: '2025-06-15',
-      finalEventDate: '2025-10-15'
-    },
-    GBIA: {
-      applicationDeadline: '2025-05-31',
-      shortlistAnnouncement: '2025-07-15',
-      finalEventDate: '2025-11-10'
-    },
-    FGI: {
-      applicationDeadline: '2025-06-30',
-      rankingAnnouncement: '2025-08-15',
-      celebrationEventDate: '2025-12-05'
-    }
-  });
-
-  // Generate all events based on dates
-  const generateEvents = () => {
-    const events = [];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Awards Calendar</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #root { min-height: 100vh; }
+        body { margin: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
     
-    // Helper to calculate dates
-    const calculateDate = (baseDate, timing, isAfter = false) => {
-      if (!baseDate) return null;
-      const date = new Date(baseDate);
-      const timingLower = timing.toLowerCase();
-      
-      if (timingLower.includes('immediately') || timingLower.includes('announcement day') || timingLower.includes('day of')) {
-        return date;
-      }
-      
-      if (timingLower.includes('next day')) {
-        date.setDate(date.getDate() + 1);
-        return date;
-      }
-      
-      const match = timingLower.match(/(\d+)\s*(hour|day|week|month)/);
-      if (match) {
-        const num = parseInt(match[1]);
-        const unit = match[2];
-        const multiplier = isAfter ? 1 : -1;
-        
-        if (unit.includes('hour')) {
-          date.setHours(date.getHours() + (num * multiplier));
-        } else if (unit.includes('day')) {
-          date.setDate(date.getDate() + (num * multiplier));
-        } else if (unit.includes('week')) {
-          date.setDate(date.getDate() + (num * 7 * multiplier));
-        } else if (unit.includes('month')) {
-          date.setMonth(date.getMonth() + (num * multiplier));
-        }
-        return date;
-      }
-      
-      return null;
-    };
+    <script type="text/babel">
+        const { useState, useMemo } = React;
 
-    // UKSUA Events
-    if (filters.awards.UKSUA) {
-      const uksua = awardDates.UKSUA;
-      
-      // Pre-deadline reminders
-      ['21 days before', '14 days before', '7 days before', '48 hours before'].forEach(timing => {
-        const date = calculateDate(uksua.applicationDeadline, timing);
-        if (date) {
-          events.push({
-            award: 'UKSUA',
-            date: date.toISOString().split('T')[0],
-            title: 'Application Reminder',
-            channel: 'email',
-            stage: 'Application Started',
-            description: 'Send reminder email to started applications'
-          });
-        }
-      });
+        const ChevronLeft = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m15 18-6-6 6-6"/>
+            </svg>
+        );
 
-      // Shortlist announcement
-      if (uksua.shortlistAnnouncement) {
-        events.push({
-          award: 'UKSUA',
-          date: uksua.shortlistAnnouncement,
-          title: 'Shortlist Announcement',
-          channel: 'email',
-          stage: 'Company Shortlisted',
-          description: 'Send shortlist announcement emails'
-        });
-        
-        const callDate = calculateDate(uksua.shortlistAnnouncement, '24 hours after', true);
-        if (callDate) {
-          events.push({
-            award: 'UKSUA',
-            date: callDate.toISOString().split('T')[0],
-            title: 'Congratulations Calls',
-            channel: 'call',
-            stage: 'Company Shortlisted',
-            description: 'Personal congratulations calls to shortlisted companies'
-          });
-        }
-      }
+        const ChevronRight = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m9 18 6-6-6-6"/>
+            </svg>
+        );
 
-      // Regional finals
-      Object.entries(uksua.regionalFinals).forEach(([region, date]) => {
-        if (filters.regions[region] && date) {
-          // Pre-event emails
-          ['4 weeks before', '2 weeks before', '1 week before', '1 day before'].forEach(timing => {
-            const eventDate = calculateDate(date, timing);
-            if (eventDate) {
-              events.push({
-                award: 'UKSUA',
-                region,
-                date: eventDate.toISOString().split('T')[0],
-                title: `${region} - Pre-Event Email`,
-                channel: 'email',
-                stage: 'Regional Final',
-                description: `Pre-event build-up for ${region} regional final`
-              });
+        const Mail = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+        );
+
+        const Phone = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+        );
+
+        const MessageCircle = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+            </svg>
+        );
+
+        const Users = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        );
+
+        const Filter = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+        );
+
+        const Download = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" x2="12" y1="15" y2="3"/>
+            </svg>
+        );
+
+        const ArrowLeft = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m12 19-7-7 7-7"/>
+                <path d="M19 12H5"/>
+            </svg>
+        );
+
+        function UnifiedCalendar() {
+          const [view, setView] = useState('month');
+          const [currentDate, setCurrentDate] = useState(new Date());
+          const [showFilters, setShowFilters] = useState(false);
+          const [showDateSetter, setShowDateSetter] = useState(true);
+          
+          const [filters, setFilters] = useState({
+            awards: { UKSUA: true, GBEA: true, GBIA: true, FGI: true },
+            channels: { email: true, call: true, whatsapp: true, social: true, research: true },
+            regions: {
+              'Wales': true, 'Scotland': true, 'Northern Ireland': true,
+              'South East': true, 'South West': true, 'North West': true,
+              'North East Yorkshire and Humber': true, 'Midlands': true,
+              'London': true, 'East of England': true
             }
           });
           
-          // Event day
-          events.push({
-            award: 'UKSUA',
-            region,
-            date,
-            title: `${region} Regional Final`,
-            channel: 'email',
-            stage: 'Regional Final Attended',
-            description: `${region} regional final event`
+          const [awardDates, setAwardDates] = useState({
+            UKSUA: {
+              applicationDeadline: '',
+              shortlistAnnouncement: '',
+              nationalFinalDate: '',
+              regionalFinals: {
+                'Wales': '', 'Scotland': '', 'Northern Ireland': '',
+                'South East': '', 'South West': '', 'North West': '',
+                'North East Yorkshire and Humber': '', 'Midlands': '',
+                'London': '', 'East of England': ''
+              }
+            },
+            GBEA: { applicationDeadline: '', shortlistAnnouncement: '', finalEventDate: '' },
+            GBIA: { applicationDeadline: '', shortlistAnnouncement: '', finalEventDate: '' },
+            FGI: { applicationDeadline: '', rankingAnnouncement: '', celebrationEventDate: '' }
           });
-          
-          // Post-event
-          const nextDay = calculateDate(date, 'next day', true);
-          if (nextDay) {
-            events.push({
-              award: 'UKSUA',
-              region,
-              date: nextDay.toISOString().split('T')[0],
-              title: `${region} - Thank You Email`,
-              channel: 'email',
-              stage: 'Regional Final Attended',
-              description: 'Post-event thank you and recap'
+
+          const calculateDate = (baseDate, timing, isAfter = false) => {
+            if (!baseDate) return null;
+            const date = new Date(baseDate);
+            const timingLower = timing.toLowerCase();
+            
+            if (timingLower.includes('immediately') || timingLower.includes('announcement day') || timingLower.includes('day of')) {
+              return date;
+            }
+            
+            if (timingLower.includes('next day')) {
+              date.setDate(date.getDate() + 1);
+              return date;
+            }
+            
+            const match = timingLower.match(/(\d+)\s*(hour|day|week|month)/);
+            if (match) {
+              const num = parseInt(match[1]);
+              const unit = match[2];
+              const multiplier = isAfter ? 1 : -1;
+              
+              if (unit.includes('hour')) {
+                date.setHours(date.getHours() + (num * multiplier));
+              } else if (unit.includes('day')) {
+                date.setDate(date.getDate() + (num * multiplier));
+              } else if (unit.includes('week')) {
+                date.setDate(date.getDate() + (num * 7 * multiplier));
+              } else if (unit.includes('month')) {
+                date.setMonth(date.getMonth() + (num * multiplier));
+              }
+              return date;
+            }
+            
+            return null;
+          };
+
+          const generateEvents = () => {
+            const events = [];
+            
+            // UKSUA
+            if (filters.awards.UKSUA) {
+              const u = awardDates.UKSUA;
+              
+              ['21 days before', '14 days before', '7 days before'].forEach(t => {
+                const d = calculateDate(u.applicationDeadline, t);
+                if (d) events.push({
+                  award: 'UKSUA',
+                  date: d.toISOString().split('T')[0],
+                  title: 'App Reminder',
+                  channel: 'email',
+                  stage: 'Application',
+                  description: 'Application reminder'
+                });
+              });
+              
+              if (u.shortlistAnnouncement) {
+                events.push({
+                  award: 'UKSUA',
+                  date: u.shortlistAnnouncement,
+                  title: 'Shortlist',
+                  channel: 'email',
+                  stage: 'Shortlist',
+                  description: 'Shortlist announcement'
+                });
+              }
+              
+              Object.entries(u.regionalFinals).forEach(([region, date]) => {
+                if (filters.regions[region] && date) {
+                  ['4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
+                    const d = calculateDate(date, t);
+                    if (d) events.push({
+                      award: 'UKSUA',
+                      region,
+                      date: d.toISOString().split('T')[0],
+                      title: `${region} Pre-Event`,
+                      channel: 'email',
+                      stage: 'Regional',
+                      description: 'Pre-event email'
+                    });
+                  });
+                  events.push({
+                    award: 'UKSUA',
+                    region,
+                    date,
+                    title: `${region} Final`,
+                    channel: 'email',
+                    stage: 'Regional',
+                    description: 'Regional final'
+                  });
+                }
+              });
+              
+              if (u.nationalFinalDate) {
+                ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
+                  const d = calculateDate(u.nationalFinalDate, t);
+                  if (d) events.push({
+                    award: 'UKSUA',
+                    date: d.toISOString().split('T')[0],
+                    title: 'National Pre-Event',
+                    channel: 'email',
+                    stage: 'National',
+                    description: 'Pre-event email'
+                  });
+                });
+                events.push({
+                  award: 'UKSUA',
+                  date: u.nationalFinalDate,
+                  title: 'National Final',
+                  channel: 'email',
+                  stage: 'National',
+                  description: 'National final'
+                });
+              }
+            }
+
+            // GBEA
+            if (filters.awards.GBEA) {
+              const g = awardDates.GBEA;
+              ['21 days before', '14 days before', '7 days before'].forEach(t => {
+                const d = calculateDate(g.applicationDeadline, t);
+                if (d) events.push({
+                  award: 'GBEA',
+                  date: d.toISOString().split('T')[0],
+                  title: 'App Reminder',
+                  channel: 'email',
+                  stage: 'Application',
+                  description: 'Reminder'
+                });
+              });
+              if (g.shortlistAnnouncement) {
+                events.push({
+                  award: 'GBEA',
+                  date: g.shortlistAnnouncement,
+                  title: 'Shortlist',
+                  channel: 'email',
+                  stage: 'Shortlist',
+                  description: 'Shortlist'
+                });
+              }
+              if (g.finalEventDate) {
+                ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
+                  const d = calculateDate(g.finalEventDate, t);
+                  if (d) events.push({
+                    award: 'GBEA',
+                    date: d.toISOString().split('T')[0],
+                    title: 'Pre-Event',
+                    channel: 'email',
+                    stage: 'Final',
+                    description: 'Pre-event'
+                  });
+                });
+                events.push({
+                  award: 'GBEA',
+                  date: g.finalEventDate,
+                  title: 'Final Event',
+                  channel: 'email',
+                  stage: 'Final',
+                  description: 'Final'
+                });
+              }
+            }
+
+            // GBIA
+            if (filters.awards.GBIA) {
+              const g = awardDates.GBIA;
+              ['21 days before', '14 days before', '7 days before'].forEach(t => {
+                const d = calculateDate(g.applicationDeadline, t);
+                if (d) events.push({
+                  award: 'GBIA',
+                  date: d.toISOString().split('T')[0],
+                  title: 'App Reminder',
+                  channel: 'email',
+                  stage: 'Application',
+                  description: 'Reminder'
+                });
+              });
+              if (g.shortlistAnnouncement) {
+                events.push({
+                  award: 'GBIA',
+                  date: g.shortlistAnnouncement,
+                  title: 'Shortlist',
+                  channel: 'email',
+                  stage: 'Shortlist',
+                  description: 'Shortlist'
+                });
+              }
+              if (g.finalEventDate) {
+                ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
+                  const d = calculateDate(g.finalEventDate, t);
+                  if (d) events.push({
+                    award: 'GBIA',
+                    date: d.toISOString().split('T')[0],
+                    title: 'Pre-Event',
+                    channel: 'email',
+                    stage: 'Final',
+                    description: 'Pre-event'
+                  });
+                });
+                events.push({
+                  award: 'GBIA',
+                  date: g.finalEventDate,
+                  title: 'Final Event',
+                  channel: 'email',
+                  stage: 'Final',
+                  description: 'Final'
+                });
+              }
+            }
+
+            // FGI
+            if (filters.awards.FGI) {
+              const f = awardDates.FGI;
+              ['21 days before', '14 days before', '7 days before'].forEach(t => {
+                const d = calculateDate(f.applicationDeadline, t);
+                if (d) events.push({
+                  award: 'FGI',
+                  date: d.toISOString().split('T')[0],
+                  title: 'App Reminder',
+                  channel: 'email',
+                  stage: 'Application',
+                  description: 'Reminder'
+                });
+              });
+              if (f.rankingAnnouncement) {
+                events.push({
+                  award: 'FGI',
+                  date: f.rankingAnnouncement,
+                  title: 'Rankings',
+                  channel: 'email',
+                  stage: 'Ranked',
+                  description: 'Rankings'
+                });
+              }
+              if (f.celebrationEventDate) {
+                ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
+                  const d = calculateDate(f.celebrationEventDate, t);
+                  if (d) events.push({
+                    award: 'FGI',
+                    date: d.toISOString().split('T')[0],
+                    title: 'Pre-Event',
+                    channel: 'email',
+                    stage: 'Event',
+                    description: 'Pre-event'
+                  });
+                });
+                events.push({
+                  award: 'FGI',
+                  date: f.celebrationEventDate,
+                  title: 'Celebration',
+                  channel: 'email',
+                  stage: 'Event',
+                  description: 'Event'
+                });
+              }
+            }
+
+            return events.filter(e => filters.channels[e.channel]);
+          };
+
+          const allEvents = useMemo(() => generateEvents(), [awardDates, filters]);
+
+          const getMonthDays = (date) => {
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+            
+            const days = [];
+            for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+            for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+            return days;
+          };
+
+          const getWeekDays = (date) => {
+            const dayOfWeek = date.getDay();
+            const monday = new Date(date);
+            monday.setDate(date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+            
+            const days = [];
+            for (let i = 0; i < 7; i++) {
+              const day = new Date(monday);
+              day.setDate(monday.getDate() + i);
+              days.push(day);
+            }
+            return days;
+          };
+
+          const getEventsForDate = (date) => {
+            if (!date) return [];
+            const dateStr = date.toISOString().split('T')[0];
+            return allEvents.filter(event => event.date === dateStr);
+          };
+
+          const formatDate = (date) => {
+            return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+          };
+
+          const getChannelIcon = (channel) => {
+            const icons = {
+              email: <Mail className="w-3 h-3" />,
+              call: <Phone className="w-3 h-3" />,
+              whatsapp: <MessageCircle className="w-3 h-3" />,
+              social: <Users className="w-3 h-3" />,
+              research: <Users className="w-3 h-3" />
+            };
+            return icons[channel] || null;
+          };
+
+          const getAwardColor = (award) => {
+            const colors = {
+              UKSUA: 'bg-purple-100 text-purple-800',
+              GBEA: 'bg-blue-100 text-blue-800',
+              GBIA: 'bg-emerald-100 text-emerald-800',
+              FGI: 'bg-amber-100 text-amber-800'
+            };
+            return colors[award] || 'bg-gray-100 text-gray-800';
+          };
+
+          const exportToGoogleCalendar = () => {
+            let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Awards//EN\n';
+            allEvents.forEach(e => {
+              const d = new Date(e.date);
+              const ds = d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+              ics += `BEGIN:VEVENT\nDTSTART:${ds}\nSUMMARY:${e.award} - ${e.title}\nDESCRIPTION:${e.description}\nEND:VEVENT\n`;
             });
-          }
-        }
-      });
+            ics += 'END:VCALENDAR';
+            
+            const blob = new Blob([ics], { type: 'text/calendar' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'awards.ics';
+            link.click();
+          };
 
-      // National final
-      if (uksua.nationalFinalDate) {
-        ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before', '2 days before'].forEach(timing => {
-          const date = calculateDate(uksua.nationalFinalDate, timing);
-          if (date) {
-            events.push({
-              award: 'UKSUA',
-              date: date.toISOString().split('T')[0],
-              title: 'National Final - Pre-Event Email',
-              channel: 'email',
-              stage: 'National Final',
-              description: 'National final build-up communications'
-            });
-          }
-        });
-        
-        events.push({
-          award: 'UKSUA',
-          date: uksua.nationalFinalDate,
-          title: 'National Final Event',
-          channel: 'email',
-          stage: 'National Final Attended',
-          description: 'UKSUA National Final Event'
-        });
-      }
-    }
+          return (
+            <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+              <a href="index.html" className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 mb-4">
+                <ArrowLeft />
+                Back to Home
+              </a>
 
-    // GBEA Events
-    if (filters.awards.GBEA) {
-      const gbea = awardDates.GBEA;
-      
-      ['21 days before', '14 days before', '7 days before'].forEach(timing => {
-        const date = calculateDate(gbea.applicationDeadline, timing);
-        if (date) {
-          events.push({
-            award: 'GBEA',
-            date: date.toISOString().split('T')[0],
-            title: 'Application Reminder',
-            channel: 'email',
-            stage: 'Application Started',
-            description: 'Reminder to complete application'
-          });
-        }
-      });
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold mb-2">Unified Awards Calendar</h1>
+                <p className="text-gray-600">View all communications across all awards</p>
+              </div>
 
-      if (gbea.shortlistAnnouncement) {
-        events.push({
-          award: 'GBEA',
-          date: gbea.shortlistAnnouncement,
-          title: 'Shortlist Announcement',
-          channel: 'email',
-          stage: 'Company Shortlisted',
-          description: 'Shortlist announcement email'
-        });
-      }
-
-      if (gbea.finalEventDate) {
-        ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before', '1 day before'].forEach(timing => {
-          const date = calculateDate(gbea.finalEventDate, timing);
-          if (date) {
-            events.push({
-              award: 'GBEA',
-              date: date.toISOString().split('T')[0],
-              title: 'Final Event - Pre-Event Email',
-              channel: 'email',
-              stage: 'Ticket Purchased',
-              description: 'Pre-event build-up communications'
-            });
-          }
-        });
-        
-        events.push({
-          award: 'GBEA',
-          date: gbea.finalEventDate,
-          title: 'GBEA Final Event',
-          channel: 'email',
-          stage: 'Event Attended',
-          description: 'Great British Entrepreneur Awards Final'
-        });
-      }
-    }
-
-    // GBIA Events
-    if (filters.awards.GBIA) {
-      const gbia = awardDates.GBIA;
-      
-      ['21 days before', '14 days before', '7 days before'].forEach(timing => {
-        const date = calculateDate(gbia.applicationDeadline, timing);
-        if (date) {
-          events.push({
-            award: 'GBIA',
-            date: date.toISOString().split('T')[0],
-            title: 'Application Reminder',
-            channel: 'email',
-            stage: 'Application Started',
-            description: 'Reminder to complete application'
-          });
-        }
-      });
-
-      if (gbia.shortlistAnnouncement) {
-        events.push({
-          award: 'GBIA',
-          date: gbia.shortlistAnnouncement,
-          title: 'Shortlist Announcement',
-          channel: 'email',
-          stage: 'Company Shortlisted',
-          description: 'Shortlist announcement email'
-        });
-      }
-
-      if (gbia.finalEventDate) {
-        ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before', '1 day before'].forEach(timing => {
-          const date = calculateDate(gbia.finalEventDate, timing);
-          if (date) {
-            events.push({
-              award: 'GBIA',
-              date: date.toISOString().split('T')[0],
-              title: 'Final Event - Pre-Event Email',
-              channel: 'email',
-              stage: 'Ticket Purchased',
-              description: 'Pre-event build-up communications'
-            });
-          }
-        });
-        
-        events.push({
-          award: 'GBIA',
-          date: gbia.finalEventDate,
-          title: 'GBIA Final Event',
-          channel: 'email',
-          stage: 'Event Attended',
-          description: 'Great British Industry Awards Final'
-        });
-      }
-    }
-
-    // FGI Events
-    if (filters.awards.FGI) {
-      const fgi = awardDates.FGI;
-      
-      ['21 days before', '14 days before', '7 days before'].forEach(timing => {
-        const date = calculateDate(fgi.applicationDeadline, timing);
-        if (date) {
-          events.push({
-            award: 'FGI',
-            date: date.toISOString().split('T')[0],
-            title: 'Application Reminder',
-            channel: 'email',
-            stage: 'Application Started',
-            description: 'Reminder to complete application'
-          });
-        }
-      });
-
-      if (fgi.rankingAnnouncement) {
-        events.push({
-          award: 'FGI',
-          date: fgi.rankingAnnouncement,
-          title: 'Rankings Announcement',
-          channel: 'email',
-          stage: 'Company Ranked',
-          description: 'FGI rankings announcement'
-        });
-      }
-
-      if (fgi.celebrationEventDate) {
-        ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before', '1 day before'].forEach(timing => {
-          const date = calculateDate(fgi.celebrationEventDate, timing);
-          if (date) {
-            events.push({
-              award: 'FGI',
-              date: date.toISOString().split('T')[0],
-              title: 'Celebration Event - Pre-Event Email',
-              channel: 'email',
-              stage: 'Ticket Purchased',
-              description: 'Pre-event build-up communications'
-            });
-          }
-        });
-        
-        events.push({
-          award: 'FGI',
-          date: fgi.celebrationEventDate,
-          title: 'FGI Celebration Event',
-          channel: 'email',
-          stage: 'Event Attended',
-          description: 'UK Fast Growth Index Celebration'
-        });
-      }
-    }
-
-    return events.filter(event => filters.channels[event.channel]);
-  };
-
-  const allEvents = useMemo(() => generateEvents(), [awardDates, filters]);
-
-  // Calendar rendering helpers
-  const getMonthDays = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    
-    const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
-    }
-    return days;
-  };
-
-  const getWeekDays = (date) => {
-    const dayOfWeek = date.getDay();
-    const monday = new Date(date);
-    monday.setDate(date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
-    
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + i);
-      days.push(day);
-    }
-    return days;
-  };
-
-  const getEventsForDate = (date) => {
-    if (!date) return [];
-    const dateStr = date.toISOString().split('T')[0];
-    return allEvents.filter(event => event.date === dateStr);
-  };
-
-  const formatDate = (date) => {
-    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  };
-
-  const getChannelIcon = (channel) => {
-    switch(channel) {
-      case 'email': return <Mail className="w-3 h-3" />;
-      case 'call': return <Phone className="w-3 h-3" />;
-      case 'whatsapp': return <MessageCircle className="w-3 h-3" />;
-      case 'social': case 'research': return <Users className="w-3 h-3" />;
-      default: return null;
-    }
-  };
-
-  const getAwardColor = (award) => {
-    switch(award) {
-      case 'UKSUA': return 'bg-purple-100 text-purple-800 border-purple-300';
-      case 'GBEA': return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'GBIA': return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-      case 'FGI': return 'bg-amber-100 text-amber-800 border-amber-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
-  const exportToGoogleCalendar = () => {
-    let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Awards Calendar//EN\n';
-    
-    allEvents.forEach(event => {
-      const dateObj = new Date(event.date);
-      const dateStr = dateObj.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-      
-      icsContent += 'BEGIN:VEVENT\n';
-      icsContent += `DTSTART:${dateStr}\n`;
-      icsContent += `SUMMARY:${event.award} - ${event.title}\n`;
-      icsContent += `DESCRIPTION:${event.description}\\nChannel: ${event.channel}\\nStage: ${event.stage}\n`;
-      icsContent += `UID:${event.award}-${event.date}-${Math.random()}\n`;
-      icsContent += 'END:VEVENT\n';
-    });
-    
-    icsContent += 'END:VCALENDAR';
-    
-    const blob = new Blob([icsContent], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'awards-calendar.ics';
-    link.click();
-  };
-
-  const navigateMonth = (direction) => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + direction);
-    setCurrentDate(newDate);
-  };
-
-  const navigateWeek = (direction) => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + (direction * 7));
-    setCurrentDate(newDate);
-  };
-
-  return (
-    <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Unified Awards Calendar</h1>
-        <p className="text-gray-600">View and manage all award communications in one place</p>
-      </div>
-
-      {/* Date Setter */}
-      {showDateSetter && (
-        <div className="mb-6 p-6 bg-white rounded-lg shadow-lg border-2 border-indigo-300">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold">Set Award Dates</h3>
-            <button onClick={() => setShowDateSetter(false)} className="text-gray-500 hover:text-gray-700">
-              Hide
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* UKSUA */}
-            <div className="border-2 border-purple-200 rounded-lg p-4">
-              <h4 className="font-bold text-purple-900 mb-3">UKSUA</h4>
-              <div className="space-y-3">
-                <input
-                  type="date"
-                  value={awardDates.UKSUA.applicationDeadline}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    UKSUA: { ...awardDates.UKSUA, applicationDeadline: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                  placeholder="Application Deadline"
-                />
-                <input
-                  type="date"
-                  value={awardDates.UKSUA.shortlistAnnouncement}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    UKSUA: { ...awardDates.UKSUA, shortlistAnnouncement: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                  placeholder="Shortlist Announcement"
-                />
-                <input
-                  type="date"
-                  value={awardDates.UKSUA.nationalFinalDate}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    UKSUA: { ...awardDates.UKSUA, nationalFinalDate: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                  placeholder="National Final"
-                />
-                <details className="text-sm">
-                  <summary className="cursor-pointer font-medium text-purple-800">Regional Finals</summary>
-                  <div className="mt-2 space-y-2 pl-2">
-                    {Object.keys(awardDates.UKSUA.regionalFinals).map(region => (
-                      <div key={region}>
-                        <label className="text-xs text-gray-600">{region}</label>
-                        <input
-                          type="date"
-                          value={awardDates.UKSUA.regionalFinals[region]}
-                          onChange={(e) => setAwardDates({
-                            ...awardDates,
-                            UKSUA: {
-                              ...awardDates.UKSUA,
-                              regionalFinals: {
-                                ...awardDates.UKSUA.regionalFinals,
-                                [region]: e.target.value
-                              }
+              {showDateSetter && (
+                <div className="mb-6 p-6 bg-white rounded-lg shadow">
+                  <div className="flex justify-between mb-4">
+                    <h3 className="font-bold">Set Award Dates</h3>
+                    <button onClick={() => setShowDateSetter(false)} className="text-sm text-gray-600">Hide</button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {Object.entries(awardDates).map(([award, dates]) => (
+                      <div key={award} className="border p-3 rounded">
+                        <h4 className="font-bold text-sm mb-2">{award}</h4>
+                        <div className="space-y-2">
+                          {Object.entries(dates).map(([key, value]) => {
+                            if (key === 'regionalFinals') {
+                              return (
+                                <details key={key} className="text-xs">
+                                  <summary className="cursor-pointer">Regionals</summary>
+                                  <div className="mt-1 space-y-1 pl-2">
+                                    {Object.entries(value).map(([region, date]) => (
+                                      <input
+                                        key={region}
+                                        type="date"
+                                        value={date}
+                                        onChange={(e) => {
+                                          const newDates = {...awardDates};
+                                          newDates[award].regionalFinals[region] = e.target.value;
+                                          setAwardDates(newDates);
+                                        }}
+                                        className="w-full text-xs p-1 border rounded"
+                                        placeholder={region}
+                                      />
+                                    ))}
+                                  </div>
+                                </details>
+                              );
                             }
+                            return (
+                              <input
+                                key={key}
+                                type="date"
+                                value={value}
+                                onChange={(e) => {
+                                  const newDates = {...awardDates};
+                                  newDates[award][key] = e.target.value;
+                                  setAwardDates(newDates);
+                                }}
+                                className="w-full text-xs p-1 border rounded"
+                                placeholder={key}
+                              />
+                            );
                           })}
-                          className="w-full px-2 py-1 border rounded text-xs"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              </div>
-            </div>
-
-            {/* GBEA */}
-            <div className="border-2 border-blue-200 rounded-lg p-4">
-              <h4 className="font-bold text-blue-900 mb-3">GBEA</h4>
-              <div className="space-y-3">
-                <input
-                  type="date"
-                  value={awardDates.GBEA.applicationDeadline}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    GBEA: { ...awardDates.GBEA, applicationDeadline: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-                <input
-                  type="date"
-                  value={awardDates.GBEA.shortlistAnnouncement}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    GBEA: { ...awardDates.GBEA, shortlistAnnouncement: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-                <input
-                  type="date"
-                  value={awardDates.GBEA.finalEventDate}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    GBEA: { ...awardDates.GBEA, finalEventDate: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-              </div>
-            </div>
-
-            {/* GBIA */}
-            <div className="border-2 border-emerald-200 rounded-lg p-4">
-              <h4 className="font-bold text-emerald-900 mb-3">GBIA</h4>
-              <div className="space-y-3">
-                <input
-                  type="date"
-                  value={awardDates.GBIA.applicationDeadline}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    GBIA: { ...awardDates.GBIA, applicationDeadline: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-                <input
-                  type="date"
-                  value={awardDates.GBIA.shortlistAnnouncement}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    GBIA: { ...awardDates.GBIA, shortlistAnnouncement: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-                <input
-                  type="date"
-                  value={awardDates.GBIA.finalEventDate}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    GBIA: { ...awardDates.GBIA, finalEventDate: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-              </div>
-            </div>
-
-            {/* FGI */}
-            <div className="border-2 border-amber-200 rounded-lg p-4">
-              <h4 className="font-bold text-amber-900 mb-3">FGI</h4>
-              <div className="space-y-3">
-                <input
-                  type="date"
-                  value={awardDates.FGI.applicationDeadline}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    FGI: { ...awardDates.FGI, applicationDeadline: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-                <input
-                  type="date"
-                  value={awardDates.FGI.rankingAnnouncement}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    FGI: { ...awardDates.FGI, rankingAnnouncement: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-                <input
-                  type="date"
-                  value={awardDates.FGI.celebrationEventDate}
-                  onChange={(e) => setAwardDates({
-                    ...awardDates,
-                    FGI: { ...awardDates.FGI, celebrationEventDate: e.target.value }
-                  })}
-                  className="w-full px-3 py-2 border rounded text-sm"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!showDateSetter && (
-        <button
-          onClick={() => setShowDateSetter(true)}
-          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-        >
-          Edit Dates
-        </button>
-      )}
-
-      {/* Controls */}
-      <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-2">
-          {['month', 'week', 'day', 'agenda'].map(v => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`px-4 py-2 rounded-lg capitalize ${
-                view === v ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-        
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 bg-white rounded-lg hover:bg-gray-100 flex items-center gap-2"
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-          </button>
-          <button
-            onClick={exportToGoogleCalendar}
-            className="px-4 py-2 bg-white rounded-lg hover:bg-gray-100 flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      {showFilters && (
-        <div className="mb-6 p-6 bg-white rounded-lg shadow-lg">
-          <h3 className="font-bold mb-4">Filters</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h4 className="font-semibold mb-2">Awards</h4>
-              {Object.keys(filters.awards).map(award => (
-                <label key={award} className="flex items-center gap-2 mb-2">
-                  <input
-                    type="checkbox"
-                    checked={filters.awards[award]}
-                    onChange={(e) => setFilters({
-                      ...filters,
-                      awards: { ...filters.awards, [award]: e.target.checked }
-                    })}
-                  />
-                  <span>{award}</span>
-                </label>
-              ))}
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-2">Channels</h4>
-              {Object.keys(filters.channels).map(channel => (
-                <label key={channel} className="flex items-center gap-2 mb-2 capitalize">
-                  <input
-                    type="checkbox"
-                    checked={filters.channels[channel]}
-                    onChange={(e) => setFilters({
-                      ...filters,
-                      channels: { ...filters.channels, [channel]: e.target.checked }
-                    })}
-                  />
-                  <span>{channel}</span>
-                </label>
-              ))}
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-2">UKSUA Regions</h4>
-              <div className="max-h-48 overflow-y-auto">
-                {Object.keys(filters.regions).map(region => (
-                  <label key={region} className="flex items-center gap-2 mb-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={filters.regions[region]}
-                      onChange={(e) => setFilters({
-                        ...filters,
-                        regions: { ...filters.regions, [region]: e.target.checked }
-                      })}
-                    />
-                    <span>{region}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Calendar Views */}
-      {view === 'month' && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <button onClick={() => navigateMonth(-1)} className="p-2 hover:bg-gray-100 rounded">
-              <ChevronLeft />
-            </button>
-            <h2 className="text-2xl font-bold">
-              {currentDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
-            </h2>
-            <button onClick={() => navigateMonth(1)} className="p-2 hover:bg-gray-100 rounded">
-              <ChevronRight />
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-7 gap-2">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-              <div key={day} className="text-center font-semibold text-gray-600 text-sm py-2">
-                {day}
-              </div>
-            ))}
-            
-            {getMonthDays(currentDate).map((day, idx) => {
-              const events = day ? getEventsForDate(day) : [];
-              return (
-                <div
-                  key={idx}
-                  className={`min-h-24 border rounded p-1 ${
-                    day ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
-                  }`}
-                >
-                  {day && (
-                    <>
-                      <div className="text-sm font-semibold mb-1">{day.getDate()}</div>
-                      <div className="space-y-1">
-                        {events.slice(0, 3).map((event, i) => (
-                          <div
-                            key={i}
-                            className={`text-xs p-1 rounded border ${getAwardColor(event.award)}`}
-                            title={`${event.title} - ${event.description}`}
-                          >
-                            <div className="flex items-center gap-1">
-                              {getChannelIcon(event.channel)}
-                              <span className="truncate">{event.award}</span>
-                            </div>
-                          </div>
-                        ))}
-                        {events.length > 3 && (
-                          <div className="text-xs text-gray-500">+{events.length - 3} more</div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {view === 'week' && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <button onClick={() => navigateWeek(-1)} className="p-2 hover:bg-gray-100 rounded">
-              <ChevronLeft />
-            </button>
-            <h2 className="text-2xl font-bold">
-              Week of {formatDate(getWeekDays(currentDate)[0])}
-            </h2>
-            <button onClick={() => navigateWeek(1)} className="p-2 hover:bg-gray-100 rounded">
-              <ChevronRight />
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-7 gap-2">
-            {getWeekDays(currentDate).map((day, idx) => {
-              const events = getEventsForDate(day);
-              return (
-                <div key={idx} className="border rounded p-2 min-h-48">
-                  <div className="font-semibold mb-2">
-                    {day.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })}
-                  </div>
-                  <div className="space-y-2">
-                    {events.map((event, i) => (
-                      <div
-                        key={i}
-                        className={`text-xs p-2 rounded border ${getAwardColor(event.award)}`}
-                      >
-                        <div className="flex items-center gap-1 mb-1">
-                          {getChannelIcon(event.channel)}
-                          <span className="font-semibold">{event.award}</span>
                         </div>
-                        <div className="font-medium">{event.title}</div>
-                        {event.region && <div className="text-xs opacity-75">{event.region}</div>}
                       </div>
                     ))}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+              )}
 
-      {view === 'day' && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <button
-              onClick={() => {
-                const newDate = new Date(currentDate);
-                newDate.setDate(currentDate.getDate() - 1);
-                setCurrentDate(newDate);
-              }}
-              className="p-2 hover:bg-gray-100 rounded"
-            >
-              <ChevronLeft />
-            </button>
-            <h2 className="text-2xl font-bold">{formatDate(currentDate)}</h2>
-            <button
-              onClick={() => {
-                const newDate = new Date(currentDate);
-                newDate.setDate(currentDate.getDate() + 1);
-                setCurrentDate(newDate);
-              }}
-              className="p-2 hover:bg-gray-100 rounded"
-            >
-              <ChevronRight />
-            </button>
-          </div>
-          
-          <div className="space-y-3">
-            {getEventsForDate(currentDate).map((event, i) => (
-              <div
-                key={i}
-                className={`p-4 rounded-lg border-2 ${getAwardColor(event.award)}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {getChannelIcon(event.channel)}
-                    <span className="font-bold">{event.award}</span>
-                  </div>
-                  <span className="text-xs uppercase font-semibold">{event.channel}</span>
+              {!showDateSetter && (
+                <button onClick={() => setShowDateSetter(true)} className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded">
+                  Edit Dates
+                </button>
+              )}
+
+              <div className="mb-6 flex flex-wrap gap-4 justify-between">
+                <div className="flex gap-2">
+                  {['month', 'week', 'agenda'].map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setView(v)}
+                      className={`px-4 py-2 rounded capitalize ${view === v ? 'bg-indigo-600 text-white' : 'bg-white'}`}
+                    >
+                      {v}
+                    </button>
+                  ))}
                 </div>
-                <div className="font-semibold text-lg mb-1">{event.title}</div>
-                {event.region && (
-                  <div className="text-sm font-medium mb-2">Region: {event.region}</div>
-                )}
-                <div className="text-sm opacity-90">{event.description}</div>
-                <div className="text-xs mt-2 opacity-75">Stage: {event.stage}</div>
+                
+                <div className="flex gap-2">
+                  <button onClick={() => setShowFilters(!showFilters)} className="px-4 py-2 bg-white rounded flex items-center gap-2">
+                    <Filter /> Filters
+                  </button>
+                  <button onClick={exportToGoogleCalendar} className="px-4 py-2 bg-white rounded flex items-center gap-2">
+                    <Download /> Export
+                  </button>
+                </div>
               </div>
-            ))}
-            {getEventsForDate(currentDate).length === 0 && (
-              <div className="text-center text-gray-500 py-12">
-                No communications scheduled for this day
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {view === 'agenda' && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Upcoming Communications</h2>
-          <div className="space-y-4">
-            {allEvents
-              .sort((a, b) => new Date(a.date) - new Date(b.date))
-              .filter(event => new Date(event.date) >= new Date())
-              .slice(0, 50)
-              .map((event, i) => (
-                <div
-                  key={i}
-                  className={`p-4 rounded-lg border-2 ${getAwardColor(event.award)}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="font-bold text-lg">
-                        {new Date(event.date).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getChannelIcon(event.channel)}
-                        <span className="font-bold">{event.award}</span>
+              {showFilters && (
+                <div className="mb-6 p-4 bg-white rounded shadow">
+                  <h3 className="font-bold mb-3">Filters</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">Awards</h4>
+                      {Object.keys(filters.awards).map(a => (
+                        <label key={a} className="flex items-center gap-2 text-sm mb-1">
+                          <input
+                            type="checkbox"
+                            checked={filters.awards[a]}
+                            onChange={(e) => {
+                              const newFilters = {...filters};
+                              newFilters.awards[a] = e.target.checked;
+                              setFilters(newFilters);
+                            }}
+                          />
+                          {a}
+                        </label>
+                      ))}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">Channels</h4>
+                      {Object.keys(filters.channels).map(c => (
+                        <label key={c} className="flex items-center gap-2 text-sm mb-1">
+                          <input
+                            type="checkbox"
+                            checked={filters.channels[c]}
+                            onChange={(e) => {
+                              const newFilters = {...filters};
+                              newFilters.channels[c] = e.target.checked;
+                              setFilters(newFilters);
+                            }}
+                          />
+                          {c}
+                        </label>
+                      ))}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">Regions</h4>
+                      <div className="max-h-40 overflow-y-auto">
+                        {Object.keys(filters.regions).map(r => (
+                          <label key={r} className="flex items-center gap-2 text-xs mb-1">
+                            <input
+                              type="checkbox"
+                              checked={filters.regions[r]}
+                              onChange={(e) => {
+                                const newFilters = {...filters};
+                                newFilters.regions[r] = e.target.checked;
+                                setFilters(newFilters);
+                              }}
+                            />
+                            {r}
+                          </label>
+                        ))}
                       </div>
                     </div>
-                    <span className="text-xs uppercase font-semibold">{event.channel}</span>
                   </div>
-                  <div className="font-semibold mb-1">{event.title}</div>
-                  {event.region && (
-                    <div className="text-sm font-medium mb-1">Region: {event.region}</div>
-                  )}
-                  <div className="text-sm opacity-90">{event.description}</div>
                 </div>
-              ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+              )}
 
-export default UnifiedCalendar;
+              {view === 'month' && (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex justify-between mb-4">
+                    <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth() - 1); setCurrentDate(d); }} className="p-2 hover:bg-gray-100 rounded">
+                      <ChevronLeft />
+                    </button>
+                    <h2 className="text-xl font-bold">
+                      {currentDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+                    </h2>
+                    <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth() + 1); setCurrentDate(d); }} className="p-2 hover:bg-gray-100 rounded">
+                      <ChevronRight />
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-7 gap-2">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                      <div key={day} className="text-center font-semibold text-xs py-2">{day}</div>
+                    ))}
+                    
+                    {getMonthDays(currentDate).map((day, idx) => {
+                      const events = day ? getEventsForDate(day) : [];
+                      return (
+                        <div key={idx} className={`min-h-20 border rounded p-1 text-xs ${day ? 'bg-white' : 'bg-gray-50'}`}>
+                          {day && (
+                            <>
+                              <div className="font-semibold mb-1">{day.getDate()}</div>
+                              {events.slice(0, 2).map((e, i) => (
+                                <div key={i} className={`p-1 rounded mb-1 ${getAwardColor(e.award)}`} title={e.description}>
+                                  <div className="flex items-center gap-1">
+                                    {getChannelIcon(e.channel)}
+                                    <span className="truncate text-xs">{e.award}</span>
+                                  </div>
+                                </div>
+                              ))}
+                              {events.length > 2 && <div className="text-xs text-gray-500">+{events.length - 2}</div>}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {view === 'week' && (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex justify-between mb-4">
+                    <button onClick={() => { const d = new Date(currentDate); d.setDate(d.getDate() - 7); setCurrentDate(d); }} className="p-2 hover:bg-gray-100 rounded">
+                      <ChevronLeft />
+                    </button>
+                    <h2 className="text-xl font-bold">Week of {formatDate(getWeekDays(currentDate)[0])}</h2>
+                    <button onClick={() => { const d = new Date(currentDate); d.setDate(d.getDate() + 7); setCurrentDate(d); }} className="p-2 hover:bg-gray-100 rounded">
+                      <ChevronRight />
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-7 gap-2">
+                    {getWeekDays(currentDate).map((day, idx) => {
+                      const events = getEventsForDate(day);
+                      return (
+                        <div key={idx} className="border rounded p-2 min-h-40">
+                          <div className="font-semibold text-sm mb-2">
+                            {day.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })}
+                          </div>
+                          {events.map((e, i) => (
+                            <div key={i} className={`text-xs p-1 rounded mb-1 ${getAwardColor(e.award)}`}>
+                              <div className="flex items-center gap-1 mb-1">
+                                {getChannelIcon(e.channel)}
+                                <span className="font-semibold">{e.award}</span>
+                              </div>
+                              <div>{e.title}</div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {view === 'agenda' && (
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-xl font-bold mb-4">Upcoming Communications</h2>
+                  <div className="space-y-3">
+                    {allEvents
+                      .sort((a, b) => new Date(a.date) - new Date(b.date))
+                      .filter(e => new Date(e.date) >= new Date())
+                      .slice(0, 30)
+                      .map((e, i) => (
+                        <div key={i} className={`p-3 rounded border ${getAwardColor(e.award)}`}>
+                          <div className="flex justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <div className="font-bold">
+                                {new Date(e.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                              </div>
+                              {getChannelIcon(e.channel)}
+                              <span className="font-bold">{e.award}</span>
+                            </div>
+                            <span className="text-xs uppercase">{e.channel}</span>
+                          </div>
+                          <div className="font-semibold">{e.title}</div>
+                          {e.region && <div className="text-sm">Region: {e.region}</div>}
+                          <div className="text-sm opacity-90">{e.description}</div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<UnifiedCalendar />);
+    </script>
+</body>
+</html>
