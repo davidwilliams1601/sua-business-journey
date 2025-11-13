@@ -863,58 +863,100 @@
                             {showDatePlanner ? 'Hide' : 'Show'} Date Planner
                         </button>
 
-                        {/* Date Planner Panel */}
+                        {/* Region Selector */}
+                        <div className="mb-4 flex items-center gap-3">
+                            <label className="text-sm font-medium text-gray-700">
+                                View Dates For Region:
+                            </label>
+                            <select
+                                value={selectedRegion}
+                                onChange={(e) => setSelectedRegion(e.target.value)}
+                                className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+                            >
+                                {regions.map(region => (
+                                    <option key={region} value={region}>{region}</option>
+                                ))}
+                            </select>
+                            {milestones.regionalFinals[selectedRegion] && (
+                                <span className="text-sm text-gray-600">
+                                    Regional Final: <strong>{formatDate(milestones.regionalFinals[selectedRegion])}</strong>
+                                </span>
+                            )}
+                        </div>
+
+{/* Date Planner Panel */}
                         {showDatePlanner && (
-                            <div className="mb-6 p-6 bg-white border-2 border-indigo-300 rounded-lg">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4">📅 Set Key Milestone Dates</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Application Deadline
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={milestones.applicationDeadline}
-                                            onChange={(e) => setMilestones({...milestones, applicationDeadline: e.target.value})}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Shortlist Announcement Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={milestones.shortlistAnnouncement}
-                                            onChange={(e) => setMilestones({...milestones, shortlistAnnouncement: e.target.value})}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Regional Final Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={milestones.regionalFinalDate}
-                                            onChange={(e) => setMilestones({...milestones, regionalFinalDate: e.target.value})}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            National Final Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={milestones.nationalFinalDate}
-                                            onChange={(e) => setMilestones({...milestones, nationalFinalDate: e.target.value})}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        />
+                            <div className="mb-6 p-6 bg-white border-2 border-indigo-300 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-bold text-gray-900 mb-6">📅 Set Key Milestone Dates</h3>
+                                
+                                {/* Global Dates */}
+                                <div className="mb-8 pb-6 border-b-2 border-gray-200">
+                                    <h4 className="font-bold text-gray-900 mb-4 text-base">🌍 Global Dates</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Application Deadline
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={milestones.applicationDeadline}
+                                                onChange={(e) => setMilestones({...milestones, applicationDeadline: e.target.value})}
+                                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Shortlist Announcement Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={milestones.shortlistAnnouncement}
+                                                onChange={(e) => setMilestones({...milestones, shortlistAnnouncement: e.target.value})}
+                                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                National Final Date
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={milestones.nationalFinalDate}
+                                                onChange={(e) => setMilestones({...milestones, nationalFinalDate: e.target.value})}
+                                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                                <p className="mt-4 text-sm text-gray-600">
-                                    ℹ️ Set your key dates above and all communication touchpoints will be automatically calculated throughout the journey.
+
+                                {/* Regional Finals */}
+                                <div>
+                                    <h4 className="font-bold text-gray-900 mb-4 text-base">🏆 Regional Final Dates (All 10 Regions)</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {regions.map(region => (
+                                            <div key={region} className="bg-gray-50 p-3 rounded-lg">
+                                                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                                                    {region}
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    value={milestones.regionalFinals[region] || ''}
+                                                    onChange={(e) => setMilestones({
+                                                        ...milestones, 
+                                                        regionalFinals: {
+                                                            ...milestones.regionalFinals,
+                                                            [region]: e.target.value
+                                                        }
+                                                    })}
+                                                    className="w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <p className="mt-6 text-sm text-indigo-700 bg-indigo-50 p-3 rounded-lg">
+                                    ℹ️ <strong>Tip:</strong> Set your key dates above and all communication touchpoints will be automatically calculated. Use the region selector below to view timeline for each specific regional final.
                                 </p>
                             </div>
                         )}
