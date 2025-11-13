@@ -76,12 +76,37 @@
         const CommsMap = () => {
             const [expandedStage, setExpandedStage] = useState(null);
             const [showDatePlanner, setShowDatePlanner] = useState(false);
+            const [selectedRegion, setSelectedRegion] = useState('South East');
             const [milestones, setMilestones] = useState({
                 applicationDeadline: '',
                 shortlistAnnouncement: '',
-                regionalFinalDate: '',
-                nationalFinalDate: ''
+                nationalFinalDate: '',
+                regionalFinals: {
+                    'Wales': '',
+                    'Scotland': '',
+                    'Northern Ireland': '',
+                    'South East': '',
+                    'South West': '',
+                    'North West': '',
+                    'North East Yorkshire and Humber': '',
+                    'Midlands': '',
+                    'London': '',
+                    'East of England': ''
+                }
             });
+            
+            const regions = [
+                'Wales',
+                'Scotland', 
+                'Northern Ireland',
+                'South East',
+                'South West',
+                'North West',
+                'North East Yorkshire and Humber',
+                'Midlands',
+                'London',
+                'East of England'
+            ];
 
             // Calculate date based on timing string and reference date
             const calculateDate = (timing, referenceDate, isAfter = false) => {
@@ -170,16 +195,17 @@
                         isAfter = true;
                     }
                 } else if (stageNum >= 5 && stageNum <= 7) {
-                    // Regional final related
+                    // Regional final related - use selected region's date
+                    const regionalDate = milestones.regionalFinals[selectedRegion];
                     if (timing.toLowerCase().includes('before')) {
-                        referenceDate = milestones.regionalFinalDate;
+                        referenceDate = regionalDate;
                     } else if (timing.toLowerCase().includes('after')) {
-                        referenceDate = milestones.regionalFinalDate;
+                        referenceDate = regionalDate;
                         isAfter = true;
                     } else if (timing.toLowerCase().includes('day of') || timing.toLowerCase().includes('morning of')) {
-                        referenceDate = milestones.regionalFinalDate;
+                        referenceDate = regionalDate;
                     } else {
-                        referenceDate = milestones.regionalFinalDate;
+                        referenceDate = regionalDate;
                         isAfter = timing.toLowerCase().includes('after') || timing.toLowerCase().includes('next day');
                     }
                 } else {
