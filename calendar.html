@@ -9,20 +9,201 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
-    <!-- React -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
-        #root { min-height: 100vh; }
-        body { margin: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .filters h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .filter-btn.active {
+            background: #764ba2;
+            color: white;
+            border-color: #764ba2;
+        }
+        
+        .event-list {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .event-item {
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid;
+        }
+        
+        .event-uksua { border-left-color: #764ba2; background: #f3f0ff; }
+        .event-gbea { border-left-color: #0ea5e9; background: #eff6ff; }
+        .event-gbia { border-left-color: #10b981; background: #f0fdf4; }
+        .event-fgi { border-left-color: #f59e0b; background: #fffbeb; }
+        
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .event-date {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+        }
+        
+        .event-award {
+            font-weight: 700;
+            color: #666;
+        }
+        
+        .event-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .event-description {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .channel-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        
+        .channel-email { background: #e3f2fd; color: #1976d2; }
+        .channel-call { background: #f3e5f5; color: #7b1fa2; }
+        .channel-whatsapp { background: #e8f5e9; color: #388e3c; }
+        .channel-social { background: #fff3e0; color: #f57c00; }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.3em;
+        }
+        
+        .no-events {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div class="loading" id="loading">Loading calendar from Firebase...</div>
     
+    <div class="container" id="mainContent" style="display: none;">
+        <a href="index.html" class="back-link">← Back to All Awards</a>
+        
+        <div class="header">
+            <h1>📅 Unified Awards Calendar</h1>
+            <p>All communications across all awards programs - automatically calculated from your key dates</p>
+        </div>
+        
+        <div class="filters">
+            <h3>Filter Events</h3>
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="filterByAward('all')">All Awards</button>
+                <button class="filter-btn" onclick="filterByAward('UKSUA')">UKSUA</button>
+                <button class="filter-btn" onclick="filterByAward('GBEA')">GBEA</button>
+                <button class="filter-btn" onclick="filterByAward('GBIA')">GBIA</button>
+                <button class="filter-btn" onclick="filterByAward('FGI')">FGI</button>
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="filterByChannel('all')">All Channels</button>
+                <button class="filter-btn" onclick="filterByChannel('email')">📧 Email</button>
+                <button class="filter-btn" onclick="filterByChannel('call')">📞 Call</button>
+                <button class="filter-btn" onclick="filterByChannel('whatsapp')">💬 WhatsApp</button>
+                <button class="filter-btn" onclick="filterByChannel('social')">📱 Social</button>
+            </div>
+        </div>
+        
+        <div class="event-list">
+            <h2 style="margin-bottom: 20px; color: #333;">Upcoming Communications</h2>
+            <div id="eventsList"></div>
+        </div>
+    </div>
+
     <script>
         // Initialize Firebase
         const firebaseConfig = {
@@ -37,747 +218,580 @@
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-    </script>
-    
-    <script type="text/babel">
-        const { useState, useMemo, useEffect } = React;
-
-        const ChevronLeft = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="m15 18-6-6 6-6"/>
-            </svg>
-        );
-
-        const ChevronRight = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="m9 18 6-6-6-6"/>
-            </svg>
-        );
-
-        const Mail = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-                <rect width="20" height="16" x="2" y="4" rx="2"/>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-            </svg>
-        );
-
-        const Phone = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
-        );
-
-        const MessageCircle = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
-            </svg>
-        );
-
-        const Users = ({ className }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-        );
-
-        const Filter = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-            </svg>
-        );
-
-        const Download = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" x2="12" y1="15" y2="3"/>
-            </svg>
-        );
-
-        const ArrowLeft = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="m12 19-7-7 7-7"/>
-                <path d="M19 12H5"/>
-            </svg>
-        );
-
-        function UnifiedCalendar() {
-          const [view, setView] = useState('month');
-          const [currentDate, setCurrentDate] = useState(new Date());
-          const [showFilters, setShowFilters] = useState(false);
-          const [showDateSetter, setShowDateSetter] = useState(true);
-          const [loading, setLoading] = useState(true);
-          
-          const [filters, setFilters] = useState({
-            awards: { UKSUA: true, GBEA: true, GBIA: true, FGI: true },
-            channels: { email: true, call: true, whatsapp: true, social: true, research: true },
-            regions: {
-              'Wales': true, 'Scotland': true, 'Northern Ireland': true,
-              'South East': true, 'South West': true, 'North West': true,
-              'North East Yorkshire and Humber': true, 'Midlands': true,
-              'London': true, 'East of England': true
-            }
-          });
-          
-          const [awardDates, setAwardDates] = useState({
-            UKSUA: {
-              applicationDeadline: '',
-              shortlistAnnouncement: '',
-              nationalFinalDate: '',
-              regionalFinals: {
-                'Wales': '', 'Scotland': '', 'Northern Ireland': '',
-                'South East': '', 'South West': '', 'North West': '',
-                'North East Yorkshire and Humber': '', 'Midlands': '',
-                'London': '', 'East of England': ''
-              }
-            },
-            GBEA: { applicationDeadline: '', shortlistAnnouncement: '', finalEventDate: '' },
-            GBIA: { applicationDeadline: '', shortlistAnnouncement: '', finalEventDate: '' },
-            FGI: { applicationDeadline: '', rankingAnnouncement: '', celebrationEventDate: '' }
-          });
-
-          // Load dates from Firebase on mount
-          useEffect(() => {
-            const unsubscribe = db.collection('awardDates').doc('current').onSnapshot((doc) => {
-              if (doc.exists) {
-                setAwardDates(doc.data());
-              }
-              setLoading(false);
-            }, (error) => {
-              console.error('Error loading dates:', error);
-              setLoading(false);
-            });
-
-            return () => unsubscribe();
-          }, []);
-
-          // Save dates to Firebase
-          const saveDates = (newDates) => {
-            setAwardDates(newDates);
-            db.collection('awardDates').doc('current').set(newDates)
-              .catch(error => console.error('Error saving dates:', error));
-          };
-
-          const calculateDate = (baseDate, timing, isAfter = false) => {
-            if (!baseDate) return null;
-            const date = new Date(baseDate);
-            const timingLower = timing.toLowerCase();
-            
-            if (timingLower.includes('immediately') || timingLower.includes('announcement day') || timingLower.includes('day of')) {
-              return date;
-            }
-            
-            if (timingLower.includes('next day')) {
-              date.setDate(date.getDate() + 1);
-              return date;
-            }
-            
-            const match = timingLower.match(/(\d+)\s*(hour|day|week|month)/);
-            if (match) {
-              const num = parseInt(match[1]);
-              const unit = match[2];
-              const multiplier = isAfter ? 1 : -1;
-              
-              if (unit.includes('hour')) {
-                date.setHours(date.getHours() + (num * multiplier));
-              } else if (unit.includes('day')) {
-                date.setDate(date.getDate() + (num * multiplier));
-              } else if (unit.includes('week')) {
-                date.setDate(date.getDate() + (num * 7 * multiplier));
-              } else if (unit.includes('month')) {
-                date.setMonth(date.getMonth() + (num * multiplier));
-              }
-              return date;
-            }
-            
-            return null;
-          };
-
-          const generateEvents = () => {
+        
+        let allEvents = [];
+        let currentAwardFilter = 'all';
+        let currentChannelFilter = 'all';
+        
+        // Helper function to add days to a date
+        function addDays(dateString, days) {
+            if (!dateString) return null;
+            const date = new Date(dateString);
+            date.setDate(date.getDate() + days);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // Helper function to subtract days from a date
+        function subtractDays(dateString, days) {
+            if (!dateString) return null;
+            const date = new Date(dateString);
+            date.setDate(date.getDate() - days);
+            return date.toISOString().split('T')[0];
+        }
+        
+        // Generate events for UKSUA
+        function generateUKSUAEvents(dates) {
             const events = [];
             
-            // UKSUA
-            if (filters.awards.UKSUA) {
-              const u = awardDates.UKSUA;
-              
-              ['21 days before', '14 days before', '7 days before'].forEach(t => {
-                const d = calculateDate(u.applicationDeadline, t);
-                if (d) events.push({
-                  award: 'UKSUA',
-                  date: d.toISOString().split('T')[0],
-                  title: 'App Reminder',
-                  channel: 'email',
-                  stage: 'Application',
-                  description: 'Application reminder'
-                });
-              });
-              
-              if (u.shortlistAnnouncement) {
+            if (dates.applicationDeadline) {
+                // Pre-deadline events
                 events.push({
-                  award: 'UKSUA',
-                  date: u.shortlistAnnouncement,
-                  title: 'Shortlist',
-                  channel: 'email',
-                  stage: 'Shortlist',
-                  description: 'Shortlist announcement'
-                });
-              }
-              
-              Object.entries(u.regionalFinals).forEach(([region, date]) => {
-                if (filters.regions[region] && date) {
-                  ['4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
-                    const d = calculateDate(date, t);
-                    if (d) events.push({
-                      award: 'UKSUA',
-                      region,
-                      date: d.toISOString().split('T')[0],
-                      title: `${region} Pre-Event`,
-                      channel: 'email',
-                      stage: 'Regional',
-                      description: 'Pre-event email'
-                    });
-                  });
-                  events.push({
+                    date: subtractDays(dates.applicationDeadline, 42),
                     award: 'UKSUA',
-                    region,
-                    date,
-                    title: `${region} Final`,
                     channel: 'email',
-                    stage: 'Regional',
-                    description: 'Regional final'
-                  });
-                }
-              });
-              
-              if (u.nationalFinalDate) {
-                ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
-                  const d = calculateDate(u.nationalFinalDate, t);
-                  if (d) events.push({
-                    award: 'UKSUA',
-                    date: d.toISOString().split('T')[0],
-                    title: 'National Pre-Event',
-                    channel: 'email',
-                    stage: 'National',
-                    description: 'Pre-event email'
-                  });
+                    title: 'Cold Outreach Campaign Starts',
+                    description: 'Begin cold email outreach to startups'
                 });
-                events.push({
-                  award: 'UKSUA',
-                  date: u.nationalFinalDate,
-                  title: 'National Final',
-                  channel: 'email',
-                  stage: 'National',
-                  description: 'National final'
-                });
-              }
-            }
-
-            // GBEA
-            if (filters.awards.GBEA) {
-              const g = awardDates.GBEA;
-              ['21 days before', '14 days before', '7 days before'].forEach(t => {
-                const d = calculateDate(g.applicationDeadline, t);
-                if (d) events.push({
-                  award: 'GBEA',
-                  date: d.toISOString().split('T')[0],
-                  title: 'App Reminder',
-                  channel: 'email',
-                  stage: 'Application',
-                  description: 'Reminder'
-                });
-              });
-              if (g.shortlistAnnouncement) {
-                events.push({
-                  award: 'GBEA',
-                  date: g.shortlistAnnouncement,
-                  title: 'Shortlist',
-                  channel: 'email',
-                  stage: 'Shortlist',
-                  description: 'Shortlist'
-                });
-              }
-              if (g.finalEventDate) {
-                ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
-                  const d = calculateDate(g.finalEventDate, t);
-                  if (d) events.push({
-                    award: 'GBEA',
-                    date: d.toISOString().split('T')[0],
-                    title: 'Pre-Event',
-                    channel: 'email',
-                    stage: 'Final',
-                    description: 'Pre-event'
-                  });
-                });
-                events.push({
-                  award: 'GBEA',
-                  date: g.finalEventDate,
-                  title: 'Final Event',
-                  channel: 'email',
-                  stage: 'Final',
-                  description: 'Final'
-                });
-              }
-            }
-
-            // GBIA
-            if (filters.awards.GBIA) {
-              const g = awardDates.GBIA;
-              ['21 days before', '14 days before', '7 days before'].forEach(t => {
-                const d = calculateDate(g.applicationDeadline, t);
-                if (d) events.push({
-                  award: 'GBIA',
-                  date: d.toISOString().split('T')[0],
-                  title: 'App Reminder',
-                  channel: 'email',
-                  stage: 'Application',
-                  description: 'Reminder'
-                });
-              });
-              if (g.shortlistAnnouncement) {
-                events.push({
-                  award: 'GBIA',
-                  date: g.shortlistAnnouncement,
-                  title: 'Shortlist',
-                  channel: 'email',
-                  stage: 'Shortlist',
-                  description: 'Shortlist'
-                });
-              }
-              if (g.finalEventDate) {
-                ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
-                  const d = calculateDate(g.finalEventDate, t);
-                  if (d) events.push({
-                    award: 'GBIA',
-                    date: d.toISOString().split('T')[0],
-                    title: 'Pre-Event',
-                    channel: 'email',
-                    stage: 'Final',
-                    description: 'Pre-event'
-                  });
-                });
-                events.push({
-                  award: 'GBIA',
-                  date: g.finalEventDate,
-                  title: 'Final Event',
-                  channel: 'email',
-                  stage: 'Final',
-                  description: 'Final'
-                });
-              }
-            }
-
-            // FGI
-            if (filters.awards.FGI) {
-              const f = awardDates.FGI;
-              ['21 days before', '14 days before', '7 days before'].forEach(t => {
-                const d = calculateDate(f.applicationDeadline, t);
-                if (d) events.push({
-                  award: 'FGI',
-                  date: d.toISOString().split('T')[0],
-                  title: 'App Reminder',
-                  channel: 'email',
-                  stage: 'Application',
-                  description: 'Reminder'
-                });
-              });
-              if (f.rankingAnnouncement) {
-                events.push({
-                  award: 'FGI',
-                  date: f.rankingAnnouncement,
-                  title: 'Rankings',
-                  channel: 'email',
-                  stage: 'Ranked',
-                  description: 'Rankings'
-                });
-              }
-              if (f.celebrationEventDate) {
-                ['6 weeks before', '4 weeks before', '2 weeks before', '1 week before'].forEach(t => {
-                  const d = calculateDate(f.celebrationEventDate, t);
-                  if (d) events.push({
-                    award: 'FGI',
-                    date: d.toISOString().split('T')[0],
-                    title: 'Pre-Event',
-                    channel: 'email',
-                    stage: 'Event',
-                    description: 'Pre-event'
-                  });
-                });
-                events.push({
-                  award: 'FGI',
-                  date: f.celebrationEventDate,
-                  title: 'Celebration',
-                  channel: 'email',
-                  stage: 'Event',
-                  description: 'Event'
-                });
-              }
-            }
-
-            return events.filter(e => filters.channels[e.channel]);
-          };
-
-          const allEvents = useMemo(() => generateEvents(), [awardDates, filters]);
-
-          const getMonthDays = (date) => {
-            const year = date.getFullYear();
-            const month = date.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const daysInMonth = lastDay.getDate();
-            const startingDayOfWeek = firstDay.getDay();
-            
-            const days = [];
-            for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
-            for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
-            return days;
-          };
-
-          const getWeekDays = (date) => {
-            const dayOfWeek = date.getDay();
-            const monday = new Date(date);
-            monday.setDate(date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
-            
-            const days = [];
-            for (let i = 0; i < 7; i++) {
-              const day = new Date(monday);
-              day.setDate(monday.getDate() + i);
-              days.push(day);
-            }
-            return days;
-          };
-
-          const getEventsForDate = (date) => {
-            if (!date) return [];
-            const dateStr = date.toISOString().split('T')[0];
-            return allEvents.filter(event => event.date === dateStr);
-          };
-
-          const formatDate = (date) => {
-            return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-          };
-
-          const getChannelIcon = (channel) => {
-            const icons = {
-              email: <Mail className="w-3 h-3" />,
-              call: <Phone className="w-3 h-3" />,
-              whatsapp: <MessageCircle className="w-3 h-3" />,
-              social: <Users className="w-3 h-3" />,
-              research: <Users className="w-3 h-3" />
-            };
-            return icons[channel] || null;
-          };
-
-          const getAwardColor = (award) => {
-            const colors = {
-              UKSUA: 'bg-purple-100 text-purple-800',
-              GBEA: 'bg-blue-100 text-blue-800',
-              GBIA: 'bg-emerald-100 text-emerald-800',
-              FGI: 'bg-amber-100 text-amber-800'
-            };
-            return colors[award] || 'bg-gray-100 text-gray-800';
-          };
-
-          const exportToGoogleCalendar = () => {
-            let ics = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Awards//EN\n';
-            allEvents.forEach(e => {
-              const d = new Date(e.date);
-              const ds = d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-              ics += `BEGIN:VEVENT\nDTSTART:${ds}\nSUMMARY:${e.award} - ${e.title}\nDESCRIPTION:${e.description}\nEND:VEVENT\n`;
-            });
-            ics += 'END:VCALENDAR';
-            
-            const blob = new Blob([ics], { type: 'text/calendar' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'awards.ics';
-            link.click();
-          };
-
-          if (loading) {
-            return (
-              <div className="w-full h-screen flex items-center justify-center">
-                <div className="text-xl text-gray-600">Loading dates from Firebase...</div>
-              </div>
-            );
-          }
-
-          return (
-            <div className="w-full max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-              <a href="index.html" className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 mb-4">
-                <ArrowLeft />
-                Back to Home
-              </a>
-
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold mb-2">Unified Awards Calendar</h1>
-                <p className="text-gray-600">View all communications across all awards - synced with Firebase</p>
-              </div>
-
-              {showDateSetter && (
-                <div className="mb-6 p-6 bg-white rounded-lg shadow">
-                  <div className="flex justify-between mb-4">
-                    <h3 className="font-bold">Set Award Dates (Syncs Everywhere! 🔥)</h3>
-                    <button onClick={() => setShowDateSetter(false)} className="text-sm text-gray-600">Hide</button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {Object.entries(awardDates).map(([award, dates]) => (
-                      <div key={award} className="border p-3 rounded">
-                        <h4 className="font-bold text-sm mb-2">{award}</h4>
-                        <div className="space-y-2">
-                          {Object.entries(dates).map(([key, value]) => {
-                            if (key === 'regionalFinals') {
-                              return (
-                                <details key={key} className="text-xs">
-                                  <summary className="cursor-pointer">Regionals</summary>
-                                  <div className="mt-1 space-y-1 pl-2">
-                                    {Object.entries(value).map(([region, date]) => (
-                                      <input
-                                        key={region}
-                                        type="date"
-                                        value={date}
-                                        onChange={(e) => {
-                                          const newDates = {...awardDates};
-                                          newDates[award].regionalFinals[region] = e.target.value;
-                                          saveDates(newDates);
-                                        }}
-                                        className="w-full text-xs p-1 border rounded"
-                                        placeholder={region}
-                                      />
-                                    ))}
-                                  </div>
-                                </details>
-                              );
-                            }
-                            return (
-                              <input
-                                key={key}
-                                type="date"
-                                value={value}
-                                onChange={(e) => {
-                                  const newDates = {...awardDates};
-                                  newDates[award][key] = e.target.value;
-                                  saveDates(newDates);
-                                }}
-                                className="w-full text-xs p-1 border rounded"
-                                placeholder={key}
-                              />
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!showDateSetter && (
-                <button onClick={() => setShowDateSetter(true)} className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded">
-                  Edit Dates
-                </button>
-              )}
-
-              <div className="mb-6 flex flex-wrap gap-4 justify-between">
-                <div className="flex gap-2">
-                  {['month', 'week', 'agenda'].map(v => (
-                    <button
-                      key={v}
-                      onClick={() => setView(v)}
-                      className={`px-4 py-2 rounded capitalize ${view === v ? 'bg-indigo-600 text-white' : 'bg-white'}`}
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
                 
-                <div className="flex gap-2">
-                  <button onClick={() => setShowFilters(!showFilters)} className="px-4 py-2 bg-white rounded flex items-center gap-2">
-                    <Filter /> Filters
-                  </button>
-                  <button onClick={exportToGoogleCalendar} className="px-4 py-2 bg-white rounded flex items-center gap-2">
-                    <Download /> Export
-                  </button>
-                </div>
-              </div>
-
-              {showFilters && (
-                <div className="mb-6 p-4 bg-white rounded shadow">
-                  <h3 className="font-bold mb-3">Filters</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">Awards</h4>
-                      {Object.keys(filters.awards).map(a => (
-                        <label key={a} className="flex items-center gap-2 text-sm mb-1">
-                          <input
-                            type="checkbox"
-                            checked={filters.awards[a]}
-                            onChange={(e) => {
-                              const newFilters = {...filters};
-                              newFilters.awards[a] = e.target.checked;
-                              setFilters(newFilters);
-                            }}
-                          />
-                          {a}
-                        </label>
-                      ))}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">Channels</h4>
-                      {Object.keys(filters.channels).map(c => (
-                        <label key={c} className="flex items-center gap-2 text-sm mb-1">
-                          <input
-                            type="checkbox"
-                            checked={filters.channels[c]}
-                            onChange={(e) => {
-                              const newFilters = {...filters};
-                              newFilters.channels[c] = e.target.checked;
-                              setFilters(newFilters);
-                            }}
-                          />
-                          {c}
-                        </label>
-                      ))}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">Regions</h4>
-                      <div className="max-h-40 overflow-y-auto">
-                        {Object.keys(filters.regions).map(r => (
-                          <label key={r} className="flex items-center gap-2 text-xs mb-1">
-                            <input
-                              type="checkbox"
-                              checked={filters.regions[r]}
-                              onChange={(e) => {
-                                const newFilters = {...filters};
-                                newFilters.regions[r] = e.target.checked;
-                                setFilters(newFilters);
-                              }}
-                            />
-                            {r}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {view === 'month' && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between mb-4">
-                    <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth() - 1); setCurrentDate(d); }} className="p-2 hover:bg-gray-100 rounded">
-                      <ChevronLeft />
-                    </button>
-                    <h2 className="text-xl font-bold">
-                      {currentDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
-                    </h2>
-                    <button onClick={() => { const d = new Date(currentDate); d.setMonth(d.getMonth() + 1); setCurrentDate(d); }} className="p-2 hover:bg-gray-100 rounded">
-                      <ChevronRight />
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-7 gap-2">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                      <div key={day} className="text-center font-semibold text-xs py-2">{day}</div>
-                    ))}
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 28),
+                    award: 'UKSUA',
+                    channel: 'social',
+                    title: 'Paid Social Campaign Launch',
+                    description: 'Start paid social media advertising'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 2),
+                    award: 'UKSUA',
+                    channel: 'email',
+                    title: 'Final Deadline Reminder',
+                    description: 'Last chance email to abandoned applications'
+                });
+                
+                events.push({
+                    date: dates.applicationDeadline,
+                    award: 'UKSUA',
+                    channel: 'email',
+                    title: 'Application Deadline',
+                    description: 'Applications close today'
+                });
+            }
+            
+            if (dates.shortlistDate) {
+                events.push({
+                    date: dates.shortlistDate,
+                    award: 'UKSUA',
+                    channel: 'email',
+                    title: 'Shortlist Announcement',
+                    description: 'Announce shortlisted companies'
+                });
+                
+                events.push({
+                    date: addDays(dates.shortlistDate, 2),
+                    award: 'UKSUA',
+                    channel: 'call',
+                    title: 'Personal Congratulations Calls',
+                    description: 'Call shortlisted companies'
+                });
+            }
+            
+            // Regional finals
+            for (let i = 1; i <= 10; i++) {
+                const regionKey = 'region' + i;
+                if (dates[regionKey]) {
+                    const regionNames = {
+                        region1: 'North East',
+                        region2: 'North West',
+                        region3: 'Yorkshire & Humber',
+                        region4: 'East Midlands',
+                        region5: 'West Midlands',
+                        region6: 'East of England',
+                        region7: 'London',
+                        region8: 'South East',
+                        region9: 'South West',
+                        region10: 'Scotland, Wales & NI'
+                    };
                     
-                    {getMonthDays(currentDate).map((day, idx) => {
-                      const events = day ? getEventsForDate(day) : [];
-                      return (
-                        <div key={idx} className={`min-h-20 border rounded p-1 text-xs ${day ? 'bg-white' : 'bg-gray-50'}`}>
-                          {day && (
-                            <>
-                              <div className="font-semibold mb-1">{day.getDate()}</div>
-                              {events.slice(0, 2).map((e, i) => (
-                                <div key={i} className={`p-1 rounded mb-1 ${getAwardColor(e.award)}`} title={e.description}>
-                                  <div className="flex items-center gap-1">
-                                    {getChannelIcon(e.channel)}
-                                    <span className="truncate text-xs">{e.award}</span>
-                                  </div>
-                                </div>
-                              ))}
-                              {events.length > 2 && <div className="text-xs text-gray-500">+{events.length - 2}</div>}
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {view === 'week' && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between mb-4">
-                    <button onClick={() => { const d = new Date(currentDate); d.setDate(d.getDate() - 7); setCurrentDate(d); }} className="p-2 hover:bg-gray-100 rounded">
-                      <ChevronLeft />
-                    </button>
-                    <h2 className="text-xl font-bold">Week of {formatDate(getWeekDays(currentDate)[0])}</h2>
-                    <button onClick={() => { const d = new Date(currentDate); d.setDate(d.getDate() + 7); setCurrentDate(d); }} className="p-2 hover:bg-gray-100 rounded">
-                      <ChevronRight />
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-7 gap-2">
-                    {getWeekDays(currentDate).map((day, idx) => {
-                      const events = getEventsForDate(day);
-                      return (
-                        <div key={idx} className="border rounded p-2 min-h-40">
-                          <div className="font-semibold text-sm mb-2">
-                            {day.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })}
-                          </div>
-                          {events.map((e, i) => (
-                            <div key={i} className={`text-xs p-1 rounded mb-1 ${getAwardColor(e.award)}`}>
-                              <div className="flex items-center gap-1 mb-1">
-                                {getChannelIcon(e.channel)}
-                                <span className="font-semibold">{e.award}</span>
-                              </div>
-                              <div>{e.title}</div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {view === 'agenda' && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-xl font-bold mb-4">Upcoming Communications</h2>
-                  <div className="space-y-3">
-                    {allEvents
-                      .sort((a, b) => new Date(a.date) - new Date(b.date))
-                      .filter(e => new Date(e.date) >= new Date())
-                      .slice(0, 30)
-                      .map((e, i) => (
-                        <div key={i} className={`p-3 rounded border ${getAwardColor(e.award)}`}>
-                          <div className="flex justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <div className="font-bold">
-                                {new Date(e.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                              </div>
-                              {getChannelIcon(e.channel)}
-                              <span className="font-bold">{e.award}</span>
-                            </div>
-                            <span className="text-xs uppercase">{e.channel}</span>
-                          </div>
-                          <div className="font-semibold">{e.title}</div>
-                          {e.region && <div className="text-sm">Region: {e.region}</div>}
-                          <div className="text-sm opacity-90">{e.description}</div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
+                    events.push({
+                        date: subtractDays(dates[regionKey], 14),
+                        award: 'UKSUA',
+                        channel: 'email',
+                        title: `${regionNames[regionKey]} - Pre-Event Email`,
+                        description: 'Event details and networking tips'
+                    });
+                    
+                    events.push({
+                        date: subtractDays(dates[regionKey], 2),
+                        award: 'UKSUA',
+                        channel: 'whatsapp',
+                        title: `${regionNames[regionKey]} - Event Reminder`,
+                        description: 'Final reminder and logistics'
+                    });
+                    
+                    events.push({
+                        date: dates[regionKey],
+                        award: 'UKSUA',
+                        channel: 'social',
+                        title: `${regionNames[regionKey]} Regional Final`,
+                        description: 'Live event coverage and winner announcements'
+                    });
+                }
+            }
+            
+            if (dates.nationalDate) {
+                events.push({
+                    date: subtractDays(dates.nationalDate, 30),
+                    award: 'UKSUA',
+                    channel: 'email',
+                    title: 'National Final - VIP Experience Email',
+                    description: 'Premium experience details for finalists'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.nationalDate, 7),
+                    award: 'UKSUA',
+                    channel: 'whatsapp',
+                    title: 'National Final - Countdown',
+                    description: 'Final countdown and logistics'
+                });
+                
+                events.push({
+                    date: dates.nationalDate,
+                    award: 'UKSUA',
+                    channel: 'social',
+                    title: 'National Final Event',
+                    description: 'Live coverage of UK StartUp Awards National Final'
+                });
+                
+                events.push({
+                    date: addDays(dates.nationalDate, 1),
+                    award: 'UKSUA',
+                    channel: 'email',
+                    title: 'Winner Package',
+                    description: 'Send winner assets and recognition materials'
+                });
+            }
+            
+            return events;
         }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<UnifiedCalendar />);
+        
+        // Generate events for GBEA
+        function generateGBEAEvents(dates) {
+            const events = [];
+            
+            if (dates.applicationDeadline) {
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 42),
+                    award: 'GBEA',
+                    channel: 'email',
+                    title: 'Cold Outreach Campaign',
+                    description: 'Target entrepreneurs with award opportunity'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 28),
+                    award: 'GBEA',
+                    channel: 'social',
+                    title: 'Social Media Campaign',
+                    description: 'Multi-channel entrepreneur targeting'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 2),
+                    award: 'GBEA',
+                    channel: 'email',
+                    title: 'Final Completion Reminder',
+                    description: 'Urgent deadline reminder'
+                });
+                
+                events.push({
+                    date: dates.applicationDeadline,
+                    award: 'GBEA',
+                    channel: 'email',
+                    title: 'Application Deadline',
+                    description: 'Applications close'
+                });
+            }
+            
+            if (dates.shortlistDate) {
+                events.push({
+                    date: dates.shortlistDate,
+                    award: 'GBEA',
+                    channel: 'email',
+                    title: 'Shortlist Announcement',
+                    description: 'Congratulations and event details'
+                });
+                
+                events.push({
+                    date: addDays(dates.shortlistDate, 2),
+                    award: 'GBEA',
+                    channel: 'call',
+                    title: 'Personal Congratulations',
+                    description: 'Call shortlisted entrepreneurs'
+                });
+            }
+            
+            if (dates.finalEvent) {
+                events.push({
+                    date: subtractDays(dates.finalEvent, 14),
+                    award: 'GBEA',
+                    channel: 'email',
+                    title: 'Pre-Event Build-Up',
+                    description: 'Meet the judges and category insights'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.finalEvent, 1),
+                    award: 'GBEA',
+                    channel: 'whatsapp',
+                    title: 'Event Reminder',
+                    description: 'Final logistics and reminders'
+                });
+                
+                events.push({
+                    date: dates.finalEvent,
+                    award: 'GBEA',
+                    channel: 'social',
+                    title: 'Final Event',
+                    description: 'Live coverage of Great British Entrepreneur Awards'
+                });
+                
+                events.push({
+                    date: addDays(dates.finalEvent, 1),
+                    award: 'GBEA',
+                    channel: 'email',
+                    title: 'Post-Event Thank You',
+                    description: 'Photos and feedback survey'
+                });
+            }
+            
+            return events;
+        }
+        
+        // Generate events for GBIA
+        function generateGBIAEvents(dates) {
+            const events = [];
+            
+            if (dates.applicationDeadline) {
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 42),
+                    award: 'GBIA',
+                    channel: 'email',
+                    title: 'Industry Sector Targeting',
+                    description: 'Industry-specific messaging campaign'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 28),
+                    award: 'GBIA',
+                    channel: 'social',
+                    title: 'LinkedIn Campaign',
+                    description: 'B2B decision-maker targeting'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 2),
+                    award: 'GBIA',
+                    channel: 'email',
+                    title: 'Deadline Reminder',
+                    description: 'Final completion reminder'
+                });
+                
+                events.push({
+                    date: dates.applicationDeadline,
+                    award: 'GBIA',
+                    channel: 'email',
+                    title: 'Application Deadline',
+                    description: 'Applications close'
+                });
+            }
+            
+            if (dates.shortlistDate) {
+                events.push({
+                    date: dates.shortlistDate,
+                    award: 'GBIA',
+                    channel: 'email',
+                    title: 'Shortlist Announcement',
+                    description: 'Industry recognition and gala invitation'
+                });
+                
+                events.push({
+                    date: addDays(dates.shortlistDate, 2),
+                    award: 'GBIA',
+                    channel: 'call',
+                    title: 'Personal Recognition Call',
+                    description: 'Partnership opportunities discussion'
+                });
+            }
+            
+            if (dates.finalEvent) {
+                events.push({
+                    date: subtractDays(dates.finalEvent, 14),
+                    award: 'GBIA',
+                    channel: 'email',
+                    title: 'Pre-Event Experience Builder',
+                    description: 'Industry networking and judge profiles'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.finalEvent, 1),
+                    award: 'GBIA',
+                    channel: 'whatsapp',
+                    title: 'Final Details',
+                    description: 'Logistics and arrival information'
+                });
+                
+                events.push({
+                    date: dates.finalEvent,
+                    award: 'GBIA',
+                    channel: 'social',
+                    title: 'Gala Event',
+                    description: 'Live coverage of Great British Industry Awards'
+                });
+                
+                events.push({
+                    date: addDays(dates.finalEvent, 1),
+                    award: 'GBIA',
+                    channel: 'email',
+                    title: 'Post-Event Follow-Up',
+                    description: 'Professional gallery and feedback'
+                });
+            }
+            
+            return events;
+        }
+        
+        // Generate events for FGI
+        function generateFGIEvents(dates) {
+            const events = [];
+            
+            if (dates.applicationDeadline) {
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 56),
+                    award: 'FGI',
+                    channel: 'email',
+                    title: 'Growth Company Targeting',
+                    description: 'Target high-growth companies'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 42),
+                    award: 'FGI',
+                    channel: 'social',
+                    title: 'Data-Driven Campaign',
+                    description: 'Growth statistics and sector trends'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.applicationDeadline, 2),
+                    award: 'FGI',
+                    channel: 'email',
+                    title: 'Completion Support',
+                    description: 'Data submission deadline reminder'
+                });
+                
+                events.push({
+                    date: dates.applicationDeadline,
+                    award: 'FGI',
+                    channel: 'email',
+                    title: 'Application Deadline',
+                    description: 'Applications close'
+                });
+            }
+            
+            if (dates.rankingDate) {
+                events.push({
+                    date: dates.rankingDate,
+                    award: 'FGI',
+                    channel: 'email',
+                    title: 'Ranking Announcement',
+                    description: 'Congratulations and rank reveal'
+                });
+                
+                events.push({
+                    date: addDays(dates.rankingDate, 2),
+                    award: 'FGI',
+                    channel: 'call',
+                    title: 'Personal Recognition',
+                    description: 'Discussion of ranking and opportunities'
+                });
+            }
+            
+            if (dates.celebrationEvent) {
+                events.push({
+                    date: subtractDays(dates.celebrationEvent, 7),
+                    award: 'FGI',
+                    channel: 'email',
+                    title: 'Pre-Event Experience',
+                    description: 'Who's attending and networking tips'
+                });
+                
+                events.push({
+                    date: subtractDays(dates.celebrationEvent, 1),
+                    award: 'FGI',
+                    channel: 'whatsapp',
+                    title: 'Event Reminder',
+                    description: 'Final logistics'
+                });
+                
+                events.push({
+                    date: dates.celebrationEvent,
+                    award: 'FGI',
+                    channel: 'social',
+                    title: 'Celebration Event',
+                    description: 'Live updates and top 10 reveals'
+                });
+                
+                events.push({
+                    date: addDays(dates.celebrationEvent, 1),
+                    award: 'FGI',
+                    channel: 'email',
+                    title: 'Post-Event Thank You',
+                    description: 'Event highlights and photos'
+                });
+            }
+            
+            return events;
+        }
+        
+        // Load all award dates and generate events
+        async function loadAllEvents() {
+            try {
+                allEvents = [];
+                
+                // Load UKSUA
+                const uksuaDoc = await db.collection('awards').doc('uksua').get();
+                if (uksuaDoc.exists) {
+                    allEvents = allEvents.concat(generateUKSUAEvents(uksuaDoc.data()));
+                }
+                
+                // Load GBEA
+                const gbeaDoc = await db.collection('awards').doc('gbea').get();
+                if (gbeaDoc.exists) {
+                    allEvents = allEvents.concat(generateGBEAEvents(gbeaDoc.data()));
+                }
+                
+                // Load GBIA
+                const gbiaDoc = await db.collection('awards').doc('gbia').get();
+                if (gbiaDoc.exists) {
+                    allEvents = allEvents.concat(generateGBIAEvents(gbiaDoc.data()));
+                }
+                
+                // Load FGI
+                const fgiDoc = await db.collection('awards').doc('fgi').get();
+                if (fgiDoc.exists) {
+                    allEvents = allEvents.concat(generateFGIEvents(fgiDoc.data()));
+                }
+                
+                // Sort events by date
+                allEvents.sort((a, b) => {
+                    if (!a.date) return 1;
+                    if (!b.date) return -1;
+                    return new Date(a.date) - new Date(b.date);
+                });
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                
+                displayEvents();
+                
+            } catch (error) {
+                console.error('Error loading events:', error);
+                document.getElementById('loading').innerHTML = 'Error loading calendar. Please refresh the page.';
+            }
+        }
+        
+        // Display events based on filters
+        function displayEvents() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let filteredEvents = allEvents.filter(event => {
+                // Filter by date (upcoming only)
+                if (!event.date) return false;
+                const eventDate = new Date(event.date);
+                if (eventDate < today) return false;
+                
+                // Filter by award
+                if (currentAwardFilter !== 'all' && event.award !== currentAwardFilter) {
+                    return false;
+                }
+                
+                // Filter by channel
+                if (currentChannelFilter !== 'all' && event.channel !== currentChannelFilter) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            const eventsList = document.getElementById('eventsList');
+            
+            if (filteredEvents.length === 0) {
+                eventsList.innerHTML = '<div class="no-events">No upcoming events match your filters. Try adjusting the filters or setting dates on your award pages.</div>';
+                return;
+            }
+            
+            eventsList.innerHTML = filteredEvents.map(event => {
+                const eventDate = new Date(event.date);
+                const dateStr = eventDate.toLocaleDateString('en-GB', { 
+                    weekday: 'short',
+                    day: 'numeric', 
+                    month: 'short',
+                    year: 'numeric'
+                });
+                
+                return `
+                    <div class="event-item event-${event.award.toLowerCase()}">
+                        <div class="event-header">
+                            <div class="event-date">${dateStr}</div>
+                            <span class="channel-badge channel-${event.channel}">${getChannelIcon(event.channel)} ${event.channel.toUpperCase()}</span>
+                        </div>
+                        <div class="event-award">${event.award}</div>
+                        <div class="event-title">${event.title}</div>
+                        <div class="event-description">${event.description}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function getChannelIcon(channel) {
+            const icons = {
+                email: '📧',
+                call: '📞',
+                whatsapp: '💬',
+                social: '📱'
+            };
+            return icons[channel] || '';
+        }
+        
+        function filterByAward(award) {
+            currentAwardFilter = award;
+            
+            // Update button styles
+            document.querySelectorAll('.filter-group')[0].querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            displayEvents();
+        }
+        
+        function filterByChannel(channel) {
+            currentChannelFilter = channel;
+            
+            // Update button styles
+            document.querySelectorAll('.filter-group')[1].querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            displayEvents();
+        }
+        
+        // Load events when page loads
+        loadAllEvents();
     </script>
 </body>
 </html>
