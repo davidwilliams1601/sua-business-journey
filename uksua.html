@@ -251,11 +251,50 @@
                 <label for="shortlistDate">Shortlist Announcement:</label>
                 <input type="date" id="shortlistDate" onchange="saveDates()">
             </div>
+            
+            <h3 style="margin-top: 25px; margin-bottom: 15px; color: #764ba2; font-size: 1.4em;">Regional Finals</h3>
             <div class="date-input-group">
-                <label for="regionalDate">Regional Finals:</label>
-                <input type="date" id="regionalDate" onchange="saveDates()">
+                <label for="region1">North East:</label>
+                <input type="date" id="region1" onchange="saveDates()">
             </div>
             <div class="date-input-group">
+                <label for="region2">North West:</label>
+                <input type="date" id="region2" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region3">Yorkshire & Humber:</label>
+                <input type="date" id="region3" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region4">East Midlands:</label>
+                <input type="date" id="region4" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region5">West Midlands:</label>
+                <input type="date" id="region5" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region6">East of England:</label>
+                <input type="date" id="region6" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region7">London:</label>
+                <input type="date" id="region7" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region8">South East:</label>
+                <input type="date" id="region8" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region9">South West:</label>
+                <input type="date" id="region9" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region10">Scotland, Wales & Northern Ireland:</label>
+                <input type="date" id="region10" onchange="saveDates()">
+            </div>
+            
+            <div class="date-input-group" style="margin-top: 25px;">
                 <label for="nationalDate">National Final:</label>
                 <input type="date" id="nationalDate" onchange="saveDates()">
             </div>
@@ -967,8 +1006,15 @@
                     const data = doc.data();
                     if (data.applicationDeadline) document.getElementById('applicationDeadline').value = data.applicationDeadline;
                     if (data.shortlistDate) document.getElementById('shortlistDate').value = data.shortlistDate;
-                    if (data.regionalDate) document.getElementById('regionalDate').value = data.regionalDate;
                     if (data.nationalDate) document.getElementById('nationalDate').value = data.nationalDate;
+                    
+                    // Load regional dates
+                    for (let i = 1; i <= 10; i++) {
+                        const regionKey = 'region' + i;
+                        if (data[regionKey]) {
+                            document.getElementById(regionKey).value = data[regionKey];
+                        }
+                    }
                 }
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
@@ -983,10 +1029,18 @@
             const dates = {
                 applicationDeadline: document.getElementById('applicationDeadline').value,
                 shortlistDate: document.getElementById('shortlistDate').value,
-                regionalDate: document.getElementById('regionalDate').value,
                 nationalDate: document.getElementById('nationalDate').value,
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             };
+            
+            // Add regional dates
+            for (let i = 1; i <= 10; i++) {
+                const regionKey = 'region' + i;
+                const regionValue = document.getElementById(regionKey).value;
+                if (regionValue) {
+                    dates[regionKey] = regionValue;
+                }
+            }
             
             try {
                 await db.collection('awards').doc('uksua').set(dates);
