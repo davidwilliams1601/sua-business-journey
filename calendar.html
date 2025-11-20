@@ -54,6 +54,38 @@
             text-decoration: underline;
         }
         
+        .view-switcher {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .view-btn {
+            padding: 10px 25px;
+            border: 2px solid #764ba2;
+            background: white;
+            color: #764ba2;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .view-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .view-btn.active {
+            background: #764ba2;
+            color: white;
+        }
+        
         .filters {
             background: white;
             padding: 20px;
@@ -94,6 +126,152 @@
             border-color: #764ba2;
         }
         
+        .calendar-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .nav-btn {
+            padding: 8px 15px;
+            border: 2px solid #764ba2;
+            background: white;
+            color: #764ba2;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .month-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-weight: 600;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            color: #666;
+        }
+        
+        .calendar-day {
+            min-height: 100px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px;
+            background: white;
+            position: relative;
+        }
+        
+        .calendar-day.other-month {
+            background: #f9f9f9;
+            opacity: 0.5;
+        }
+        
+        .calendar-day.today {
+            border-color: #764ba2;
+            background: #f3f0ff;
+        }
+        
+        .day-number {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        
+        .day-event {
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .day-event:hover {
+            opacity: 0.8;
+        }
+        
+        .event-uksua { background: #f3f0ff; color: #764ba2; }
+        .event-gbea { background: #eff6ff; color: #0ea5e9; }
+        .event-gbia { background: #f0fdf4; color: #10b981; }
+        .event-fgi { background: #fffbeb; color: #f59e0b; }
+        
+        .week-view {
+            display: none;
+        }
+        
+        .week-view.active {
+            display: block;
+        }
+        
+        .week-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(7, 1fr);
+            gap: 2px;
+        }
+        
+        .time-slot {
+            border: 1px solid #e0e0e0;
+            padding: 5px;
+            background: #fafafa;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .week-day-header {
+            text-align: center;
+            font-weight: 600;
+            padding: 15px 5px;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .week-cell {
+            border: 1px solid #e0e0e0;
+            padding: 5px;
+            background: white;
+            min-height: 60px;
+        }
+        
         .event-list {
             background: white;
             padding: 25px;
@@ -108,10 +286,10 @@
             border-left: 5px solid;
         }
         
-        .event-uksua { border-left-color: #764ba2; background: #f3f0ff; }
-        .event-gbea { border-left-color: #0ea5e9; background: #eff6ff; }
-        .event-gbia { border-left-color: #10b981; background: #f0fdf4; }
-        .event-fgi { border-left-color: #f59e0b; background: #fffbeb; }
+        .event-item.event-uksua { border-left-color: #764ba2; background: #f3f0ff; }
+        .event-item.event-gbea { border-left-color: #0ea5e9; background: #eff6ff; }
+        .event-item.event-gbia { border-left-color: #10b981; background: #f0fdf4; }
+        .event-item.event-fgi { border-left-color: #f59e0b; background: #fffbeb; }
         
         .event-header {
             display: flex;
@@ -167,6 +345,10 @@
             padding: 40px;
             color: #666;
         }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -178,6 +360,12 @@
         <div class="header">
             <h1>📅 Unified Awards Calendar</h1>
             <p>All communications across all awards programs - automatically calculated from your key dates</p>
+        </div>
+        
+        <div class="view-switcher">
+            <button class="view-btn active" onclick="switchView('month')">Month View</button>
+            <button class="view-btn" onclick="switchView('week')">Week View</button>
+            <button class="view-btn" onclick="switchView('list')">List View</button>
         </div>
         
         <div class="filters">
@@ -198,7 +386,28 @@
             </div>
         </div>
         
-        <div class="event-list">
+        <!-- Month View -->
+        <div class="calendar-container" id="monthView">
+            <div class="calendar-header">
+                <button class="nav-btn" onclick="changeMonth(-1)">← Previous</button>
+                <div class="month-title" id="monthTitle"></div>
+                <button class="nav-btn" onclick="changeMonth(1)">Next →</button>
+            </div>
+            <div class="calendar-grid" id="monthGrid"></div>
+        </div>
+        
+        <!-- Week View -->
+        <div class="calendar-container week-view" id="weekView">
+            <div class="calendar-header">
+                <button class="nav-btn" onclick="changeWeek(-1)">← Previous</button>
+                <div class="month-title" id="weekTitle"></div>
+                <button class="nav-btn" onclick="changeWeek(1)">Next →</button>
+            </div>
+            <div class="week-grid" id="weekGrid"></div>
+        </div>
+        
+        <!-- List View -->
+        <div class="event-list hidden" id="listView">
             <h2 style="margin-bottom: 20px; color: #333;">Upcoming Communications</h2>
             <div id="eventsList"></div>
         </div>
@@ -222,6 +431,12 @@
         let allEvents = [];
         let currentAwardFilter = 'all';
         let currentChannelFilter = 'all';
+        let currentView = 'month';
+        let currentMonth = new Date();
+        let currentWeekStart = new Date();
+        
+        // Set current week to start on Monday
+        currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1);
         
         // Helper function to add days to a date
         function addDays(dateString, days) {
@@ -244,12 +459,11 @@
             const events = [];
             
             if (dates.applicationDeadline) {
-                // Pre-deadline events
                 events.push({
                     date: subtractDays(dates.applicationDeadline, 42),
                     award: 'UKSUA',
                     channel: 'email',
-                    title: 'Cold Outreach Campaign Starts',
+                    title: 'Cold Outreach Campaign',
                     description: 'Begin cold email outreach to startups'
                 });
                 
@@ -257,7 +471,7 @@
                     date: subtractDays(dates.applicationDeadline, 28),
                     award: 'UKSUA',
                     channel: 'social',
-                    title: 'Paid Social Campaign Launch',
+                    title: 'Paid Social Campaign',
                     description: 'Start paid social media advertising'
                 });
                 
@@ -291,50 +505,53 @@
                     date: addDays(dates.shortlistDate, 2),
                     award: 'UKSUA',
                     channel: 'call',
-                    title: 'Personal Congratulations Calls',
+                    title: 'Congratulations Calls',
                     description: 'Call shortlisted companies'
                 });
             }
             
             // Regional finals
+            const regionNames = {
+                region1: 'North East',
+                region2: 'North West',
+                region3: 'Yorkshire & Humber',
+                region4: 'East Midlands',
+                region5: 'West Midlands',
+                region6: 'East of England',
+                region7: 'London',
+                region8: 'South East',
+                region9: 'South West',
+                region10: 'Scotland, Wales & NI'
+            };
+            
             for (let i = 1; i <= 10; i++) {
                 const regionKey = 'region' + i;
                 if (dates[regionKey]) {
-                    const regionNames = {
-                        region1: 'North East',
-                        region2: 'North West',
-                        region3: 'Yorkshire & Humber',
-                        region4: 'East Midlands',
-                        region5: 'West Midlands',
-                        region6: 'East of England',
-                        region7: 'London',
-                        region8: 'South East',
-                        region9: 'South West',
-                        region10: 'Scotland, Wales & NI'
-                    };
-                    
                     events.push({
                         date: subtractDays(dates[regionKey], 14),
                         award: 'UKSUA',
                         channel: 'email',
-                        title: `${regionNames[regionKey]} - Pre-Event Email`,
-                        description: 'Event details and networking tips'
+                        title: `${regionNames[regionKey]} Pre-Event`,
+                        description: 'Event details and networking tips',
+                        region: regionNames[regionKey]
                     });
                     
                     events.push({
                         date: subtractDays(dates[regionKey], 2),
                         award: 'UKSUA',
                         channel: 'whatsapp',
-                        title: `${regionNames[regionKey]} - Event Reminder`,
-                        description: 'Final reminder and logistics'
+                        title: `${regionNames[regionKey]} Reminder`,
+                        description: 'Final reminder and logistics',
+                        region: regionNames[regionKey]
                     });
                     
                     events.push({
                         date: dates[regionKey],
                         award: 'UKSUA',
                         channel: 'social',
-                        title: `${regionNames[regionKey]} Regional Final`,
-                        description: 'Live event coverage and winner announcements'
+                        title: `${regionNames[regionKey]} Final`,
+                        description: 'Regional final event',
+                        region: regionNames[regionKey]
                     });
                 }
             }
@@ -344,15 +561,15 @@
                     date: subtractDays(dates.nationalDate, 30),
                     award: 'UKSUA',
                     channel: 'email',
-                    title: 'National Final - VIP Experience Email',
-                    description: 'Premium experience details for finalists'
+                    title: 'National VIP Email',
+                    description: 'Premium experience details'
                 });
                 
                 events.push({
                     date: subtractDays(dates.nationalDate, 7),
                     award: 'UKSUA',
                     channel: 'whatsapp',
-                    title: 'National Final - Countdown',
+                    title: 'National Countdown',
                     description: 'Final countdown and logistics'
                 });
                 
@@ -360,8 +577,8 @@
                     date: dates.nationalDate,
                     award: 'UKSUA',
                     channel: 'social',
-                    title: 'National Final Event',
-                    description: 'Live coverage of UK StartUp Awards National Final'
+                    title: 'National Final',
+                    description: 'UK StartUp Awards National Final'
                 });
                 
                 events.push({
@@ -369,7 +586,7 @@
                     award: 'UKSUA',
                     channel: 'email',
                     title: 'Winner Package',
-                    description: 'Send winner assets and recognition materials'
+                    description: 'Send winner assets'
                 });
             }
             
@@ -385,23 +602,23 @@
                     date: subtractDays(dates.applicationDeadline, 42),
                     award: 'GBEA',
                     channel: 'email',
-                    title: 'Cold Outreach Campaign',
-                    description: 'Target entrepreneurs with award opportunity'
+                    title: 'Cold Outreach',
+                    description: 'Target entrepreneurs'
                 });
                 
                 events.push({
                     date: subtractDays(dates.applicationDeadline, 28),
                     award: 'GBEA',
                     channel: 'social',
-                    title: 'Social Media Campaign',
-                    description: 'Multi-channel entrepreneur targeting'
+                    title: 'Social Campaign',
+                    description: 'Multi-channel targeting'
                 });
                 
                 events.push({
                     date: subtractDays(dates.applicationDeadline, 2),
                     award: 'GBEA',
                     channel: 'email',
-                    title: 'Final Completion Reminder',
+                    title: 'Final Reminder',
                     description: 'Urgent deadline reminder'
                 });
                 
@@ -427,7 +644,7 @@
                     date: addDays(dates.shortlistDate, 2),
                     award: 'GBEA',
                     channel: 'call',
-                    title: 'Personal Congratulations',
+                    title: 'Congratulations Calls',
                     description: 'Call shortlisted entrepreneurs'
                 });
             }
@@ -438,7 +655,7 @@
                     award: 'GBEA',
                     channel: 'email',
                     title: 'Pre-Event Build-Up',
-                    description: 'Meet the judges and category insights'
+                    description: 'Meet judges and category insights'
                 });
                 
                 events.push({
@@ -446,7 +663,7 @@
                     award: 'GBEA',
                     channel: 'whatsapp',
                     title: 'Event Reminder',
-                    description: 'Final logistics and reminders'
+                    description: 'Final logistics'
                 });
                 
                 events.push({
@@ -454,15 +671,15 @@
                     award: 'GBEA',
                     channel: 'social',
                     title: 'Final Event',
-                    description: 'Live coverage of Great British Entrepreneur Awards'
+                    description: 'Great British Entrepreneur Awards'
                 });
                 
                 events.push({
                     date: addDays(dates.finalEvent, 1),
                     award: 'GBEA',
                     channel: 'email',
-                    title: 'Post-Event Thank You',
-                    description: 'Photos and feedback survey'
+                    title: 'Thank You',
+                    description: 'Photos and feedback'
                 });
             }
             
@@ -478,8 +695,8 @@
                     date: subtractDays(dates.applicationDeadline, 42),
                     award: 'GBIA',
                     channel: 'email',
-                    title: 'Industry Sector Targeting',
-                    description: 'Industry-specific messaging campaign'
+                    title: 'Industry Targeting',
+                    description: 'Industry-specific messaging'
                 });
                 
                 events.push({
@@ -487,7 +704,7 @@
                     award: 'GBIA',
                     channel: 'social',
                     title: 'LinkedIn Campaign',
-                    description: 'B2B decision-maker targeting'
+                    description: 'B2B targeting'
                 });
                 
                 events.push({
@@ -513,15 +730,15 @@
                     award: 'GBIA',
                     channel: 'email',
                     title: 'Shortlist Announcement',
-                    description: 'Industry recognition and gala invitation'
+                    description: 'Industry recognition'
                 });
                 
                 events.push({
                     date: addDays(dates.shortlistDate, 2),
                     award: 'GBIA',
                     channel: 'call',
-                    title: 'Personal Recognition Call',
-                    description: 'Partnership opportunities discussion'
+                    title: 'Recognition Call',
+                    description: 'Partnership opportunities'
                 });
             }
             
@@ -530,8 +747,8 @@
                     date: subtractDays(dates.finalEvent, 14),
                     award: 'GBIA',
                     channel: 'email',
-                    title: 'Pre-Event Experience Builder',
-                    description: 'Industry networking and judge profiles'
+                    title: 'Pre-Event Builder',
+                    description: 'Networking and judge profiles'
                 });
                 
                 events.push({
@@ -539,7 +756,7 @@
                     award: 'GBIA',
                     channel: 'whatsapp',
                     title: 'Final Details',
-                    description: 'Logistics and arrival information'
+                    description: 'Logistics and arrival'
                 });
                 
                 events.push({
@@ -547,15 +764,15 @@
                     award: 'GBIA',
                     channel: 'social',
                     title: 'Gala Event',
-                    description: 'Live coverage of Great British Industry Awards'
+                    description: 'Great British Industry Awards'
                 });
                 
                 events.push({
                     date: addDays(dates.finalEvent, 1),
                     award: 'GBIA',
                     channel: 'email',
-                    title: 'Post-Event Follow-Up',
-                    description: 'Professional gallery and feedback'
+                    title: 'Follow-Up',
+                    description: 'Gallery and feedback'
                 });
             }
             
@@ -579,8 +796,8 @@
                     date: subtractDays(dates.applicationDeadline, 42),
                     award: 'FGI',
                     channel: 'social',
-                    title: 'Data-Driven Campaign',
-                    description: 'Growth statistics and sector trends'
+                    title: 'Data Campaign',
+                    description: 'Growth statistics'
                 });
                 
                 events.push({
@@ -588,7 +805,7 @@
                     award: 'FGI',
                     channel: 'email',
                     title: 'Completion Support',
-                    description: 'Data submission deadline reminder'
+                    description: 'Deadline reminder'
                 });
                 
                 events.push({
@@ -606,7 +823,7 @@
                     award: 'FGI',
                     channel: 'email',
                     title: 'Ranking Announcement',
-                    description: 'Congratulations and rank reveal'
+                    description: 'Rank reveal'
                 });
                 
                 events.push({
@@ -614,7 +831,7 @@
                     award: 'FGI',
                     channel: 'call',
                     title: 'Personal Recognition',
-                    description: 'Discussion of ranking and opportunities'
+                    description: 'Discussion of ranking'
                 });
             }
             
@@ -624,7 +841,7 @@
                     award: 'FGI',
                     channel: 'email',
                     title: 'Pre-Event Experience',
-                    description: 'Who is attending and networking tips'
+                    description: 'Networking tips'
                 });
                 
                 events.push({
@@ -640,15 +857,15 @@
                     award: 'FGI',
                     channel: 'social',
                     title: 'Celebration Event',
-                    description: 'Live updates and top 10 reveals'
+                    description: 'Top 10 reveals'
                 });
                 
                 events.push({
                     date: addDays(dates.celebrationEvent, 1),
                     award: 'FGI',
                     channel: 'email',
-                    title: 'Post-Event Thank You',
-                    description: 'Event highlights and photos'
+                    title: 'Thank You',
+                    description: 'Highlights and photos'
                 });
             }
             
@@ -660,31 +877,26 @@
             try {
                 allEvents = [];
                 
-                // Load UKSUA
                 const uksuaDoc = await db.collection('awards').doc('uksua').get();
                 if (uksuaDoc.exists) {
                     allEvents = allEvents.concat(generateUKSUAEvents(uksuaDoc.data()));
                 }
                 
-                // Load GBEA
                 const gbeaDoc = await db.collection('awards').doc('gbea').get();
                 if (gbeaDoc.exists) {
                     allEvents = allEvents.concat(generateGBEAEvents(gbeaDoc.data()));
                 }
                 
-                // Load GBIA
                 const gbiaDoc = await db.collection('awards').doc('gbia').get();
                 if (gbiaDoc.exists) {
                     allEvents = allEvents.concat(generateGBIAEvents(gbiaDoc.data()));
                 }
                 
-                // Load FGI
                 const fgiDoc = await db.collection('awards').doc('fgi').get();
                 if (fgiDoc.exists) {
                     allEvents = allEvents.concat(generateFGIEvents(fgiDoc.data()));
                 }
                 
-                // Sort events by date
                 allEvents.sort((a, b) => {
                     if (!a.date) return 1;
                     if (!b.date) return -1;
@@ -694,7 +906,7 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
                 
-                displayEvents();
+                renderCurrentView();
                 
             } catch (error) {
                 console.error('Error loading events:', error);
@@ -702,23 +914,217 @@
             }
         }
         
-        // Display events based on filters
-        function displayEvents() {
+        function switchView(view) {
+            currentView = view;
+            
+            // Update buttons
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide views
+            document.getElementById('monthView').classList.toggle('hidden', view !== 'month');
+            document.getElementById('weekView').classList.toggle('hidden', view !== 'week');
+            document.getElementById('listView').classList.toggle('hidden', view !== 'list');
+            
+            renderCurrentView();
+        }
+        
+        function renderCurrentView() {
+            if (currentView === 'month') {
+                renderMonthView();
+            } else if (currentView === 'week') {
+                renderWeekView();
+            } else {
+                displayListView();
+            }
+        }
+        
+        function renderMonthView() {
+            const monthTitle = document.getElementById('monthTitle');
+            const monthGrid = document.getElementById('monthGrid');
+            
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            
+            monthTitle.textContent = currentMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday
+            
+            // Adjust to make Monday the first day
+            const startOffset = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+            
+            monthGrid.innerHTML = '';
+            
+            // Day headers
+            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            dayNames.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                monthGrid.appendChild(header);
+            });
+            
+            // Previous month days
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for (let i = startOffset - 1; i >= 0; i--) {
+                const day = prevMonthLastDay - i;
+                const cell = createDayCell(new Date(year, month - 1, day), true);
+                monthGrid.appendChild(cell);
+            }
+            
+            // Current month days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const cell = createDayCell(date, false);
+                monthGrid.appendChild(cell);
+            }
+            
+            // Next month days
+            const remainingCells = 42 - (startOffset + daysInMonth);
+            for (let day = 1; day <= remainingCells; day++) {
+                const cell = createDayCell(new Date(year, month + 1, day), true);
+                monthGrid.appendChild(cell);
+            }
+        }
+        
+        function createDayCell(date, isOtherMonth) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day';
+            
+            if (isOtherMonth) {
+                cell.classList.add('other-month');
+            }
+            
+            const today = new Date();
+            if (date.toDateString() === today.toDateString()) {
+                cell.classList.add('today');
+            }
+            
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = date.getDate();
+            cell.appendChild(dayNumber);
+            
+            const eventsContainer = document.createElement('div');
+            eventsContainer.className = 'day-events';
+            
+            // Find events for this day
+            const dateStr = date.toISOString().split('T')[0];
+            const dayEvents = allEvents.filter(event => {
+                if (!event.date) return false;
+                if (event.date !== dateStr) return false;
+                
+                // Apply filters
+                if (currentAwardFilter !== 'all' && event.award !== currentAwardFilter) {
+                    return false;
+                }
+                if (currentChannelFilter !== 'all' && event.channel !== currentChannelFilter) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            dayEvents.forEach(event => {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = `day-event event-${event.award.toLowerCase()}`;
+                eventDiv.textContent = `${getChannelIcon(event.channel)} ${event.title}`;
+                eventDiv.title = `${event.award} - ${event.title}\n${event.description}`;
+                eventsContainer.appendChild(eventDiv);
+            });
+            
+            cell.appendChild(eventsContainer);
+            return cell;
+        }
+        
+        function changeMonth(direction) {
+            currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + direction, 1);
+            renderMonthView();
+        }
+        
+        function renderWeekView() {
+            const weekTitle = document.getElementById('weekTitle');
+            const weekGrid = document.getElementById('weekGrid');
+            
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            
+            weekTitle.textContent = `Week of ${currentWeekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} - ${weekEnd.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+            
+            weekGrid.innerHTML = '';
+            
+            // Header row
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'week-day-header';
+            weekGrid.appendChild(emptyCell);
+            
+            const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(date.getDate() + i);
+                
+                const header = document.createElement('div');
+                header.className = 'week-day-header';
+                header.innerHTML = `${dayNames[i]}<br>${date.getDate()}`;
+                weekGrid.appendChild(header);
+            }
+            
+            // All day events row
+            const allDayLabel = document.createElement('div');
+            allDayLabel.className = 'time-slot';
+            allDayLabel.textContent = 'All Day';
+            weekGrid.appendChild(allDayLabel);
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(date.getDate() + i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                const cell = document.createElement('div');
+                cell.className = 'week-cell';
+                
+                const dayEvents = allEvents.filter(event => {
+                    if (!event.date || event.date !== dateStr) return false;
+                    if (currentAwardFilter !== 'all' && event.award !== currentAwardFilter) return false;
+                    if (currentChannelFilter !== 'all' && event.channel !== currentChannelFilter) return false;
+                    return true;
+                });
+                
+                dayEvents.forEach(event => {
+                    const eventDiv = document.createElement('div');
+                    eventDiv.className = `day-event event-${event.award.toLowerCase()}`;
+                    eventDiv.textContent = `${getChannelIcon(event.channel)} ${event.title}`;
+                    eventDiv.title = `${event.award} - ${event.title}\n${event.description}`;
+                    eventDiv.style.marginBottom = '5px';
+                    cell.appendChild(eventDiv);
+                });
+                
+                weekGrid.appendChild(cell);
+            }
+        }
+        
+        function changeWeek(direction) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + (direction * 7));
+            renderWeekView();
+        }
+        
+        function displayListView() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
             let filteredEvents = allEvents.filter(event => {
-                // Filter by date (upcoming only)
                 if (!event.date) return false;
                 const eventDate = new Date(event.date);
                 if (eventDate < today) return false;
                 
-                // Filter by award
                 if (currentAwardFilter !== 'all' && event.award !== currentAwardFilter) {
                     return false;
                 }
                 
-                // Filter by channel
                 if (currentChannelFilter !== 'all' && event.channel !== currentChannelFilter) {
                     return false;
                 }
@@ -769,28 +1175,25 @@
         function filterByAward(award) {
             currentAwardFilter = award;
             
-            // Update button styles
             document.querySelectorAll('.filter-group')[0].querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
             
-            displayEvents();
+            renderCurrentView();
         }
         
         function filterByChannel(channel) {
             currentChannelFilter = channel;
             
-            // Update button styles
             document.querySelectorAll('.filter-group')[1].querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
             
-            displayEvents();
+            renderCurrentView();
         }
         
-        // Load events when page loads
         loadAllEvents();
     </script>
 </body>
