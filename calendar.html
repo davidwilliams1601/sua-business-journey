@@ -349,6 +349,24 @@
         .hidden {
             display: none;
         }
+        
+        .export-btn {
+            padding: 10px 20px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: #5a3780;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -360,6 +378,10 @@
         <div class="header">
             <h1>📅 Unified Awards Calendar</h1>
             <p>All communications across all awards programs - automatically calculated from your key dates</p>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button class="export-btn" onclick="exportToGoogleCalendar()">📅 Add to Google Calendar</button>
+                <button class="export-btn" onclick="downloadICS()">⬇️ Download .ics File</button>
+            </div>
         </div>
         
         <div class="view-switcher">
@@ -521,10 +543,12 @@
                 region7: 'London',
                 region8: 'South East',
                 region9: 'South West',
-                region10: 'Scotland, Wales & NI'
+                region10: 'Scotland',
+                region11: 'Wales',
+                region12: 'Northern Ireland'
             };
             
-            for (let i = 1; i <= 10; i++) {
+            for (let i = 1; i <= 12; i++) {
                 const regionKey = 'region' + i;
                 if (dates[regionKey]) {
                     events.push({
@@ -1192,6 +1216,125 @@
             event.target.classList.add('active');
             
             renderCurrentView();
+        }
+        
+        // Export functions
+        function getFilteredEvents() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            return allEvents.filter(event => {
+                if (!event.date) return false;
+                const eventDate = new Date(event.date);
+                if (eventDate < today) return false;
+                
+                if (currentAwardFilter !== 'all' && event.award !== currentAwardFilter) {
+                    return false;
+                }
+                
+                if (currentChannelFilter !== 'all' && event.channel !== currentChannelFilter) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+        
+        function formatDateForICS(dateStr) {
+            // Convert YYYY-MM-DD to YYYYMMDD format for ICS
+            return dateStr.replace(/-/g, '');
+        }
+        
+        function escapeICS(text) {
+            // Escape special characters for ICS format
+            return text.replace(/\\/g, '\\\\')
+                       .replace(/;/g, '\\;')
+                       .replace(/,/g, '\\,')
+                       .replace(/\n/g, '\\n');
+        }
+        
+        function downloadICS() {
+            const events = getFilteredEvents();
+            
+            if (events.length === 0) {
+                alert('No events to export. Try adjusting your filters or adding dates to your award pages.');
+                return;
+            }
+            
+            let icsContent = 'BEGIN:VCALENDAR\n';
+            icsContent += 'VERSION:2.0\n';
+            icsContent += 'PRODID:-//Ideas Forums//Awards Calendar//EN\n';
+            icsContent += 'CALSCALE:GREGORIAN\n';
+            icsContent += 'METHOD:PUBLISH\n';
+            icsContent += 'X-WR-CALNAME:Ideas Forums Awards Calendar\n';
+            icsContent += 'X-WR-TIMEZONE:Europe/London\n';
+            
+            events.forEach((event, index) => {
+                const dateFormatted = formatDateForICS(event.date);
+                const summary = escapeICS(`${event.award} - ${event.title}`);
+                const description = escapeICS(`${event.description}\n\nChannel: ${event.channel.toUpperCase()}`);
+                
+                icsContent += 'BEGIN:VEVENT\n';
+                icsContent += `UID:${event.date}-${index}@ideasforums.co.uk\n`;
+                icsContent += `DTSTAMP:${formatDateForICS(new Date().toISOString().split('T')[0])}T120000Z\n`;
+                icsContent += `DTSTART;VALUE=DATE:${dateFormatted}\n`;
+                icsContent += `SUMMARY:${summary}\n`;
+                icsContent += `DESCRIPTION:${description}\n`;
+                icsContent += `CATEGORIES:${event.award},${event.channel}\n`;
+                icsContent += 'STATUS:CONFIRMED\n';
+                icsContent += 'TRANSP:TRANSPARENT\n';
+                icsContent += 'END:VEVENT\n';
+            });
+            
+            icsContent += 'END:VCALENDAR';
+            
+            // Create download
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'ideas-forums-awards-calendar.ics';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(`Successfully exported ${events.length} events! Import the downloaded .ics file into any calendar app.`);
+        }
+        
+        function exportToGoogleCalendar() {
+            const events = getFilteredEvents();
+            
+            if (events.length === 0) {
+                alert('No events to export. Try adjusting your filters or adding dates to your award pages.');
+                return;
+            }
+            
+            // Google Calendar has URL length limits, so we'll add one event at a time
+            // Or we can open multiple tabs
+            if (events.length > 5) {
+                const proceed = confirm(`You have ${events.length} events to add. This will open multiple browser tabs. Would you prefer to download an .ics file instead?`);
+                if (proceed) {
+                    downloadICS();
+                    return;
+                }
+            }
+            
+            let addedCount = 0;
+            events.slice(0, 5).forEach((event, index) => {
+                setTimeout(() => {
+                    const title = encodeURIComponent(`${event.award} - ${event.title}`);
+                    const details = encodeURIComponent(`${event.description}\n\nChannel: ${event.channel.toUpperCase()}\nAward: ${event.award}`);
+                    const dateFormatted = event.date.replace(/-/g, '');
+                    
+                    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dateFormatted}/${dateFormatted}&sf=true&output=xml`;
+                    
+                    window.open(googleCalendarUrl, '_blank');
+                    addedCount++;
+                }, index * 500); // Stagger openings by 500ms
+            });
+            
+            if (events.length > 5) {
+                alert(`Opening the first 5 events. For all ${events.length} events, please use the "Download .ics File" option instead.`);
+            }
         }
         
         loadAllEvents();
