@@ -290,8 +290,16 @@
                 <input type="date" id="region9" onchange="saveDates()">
             </div>
             <div class="date-input-group">
-                <label for="region10">Scotland, Wales & Northern Ireland:</label>
+                <label for="region10">Scotland:</label>
                 <input type="date" id="region10" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region11">Wales:</label>
+                <input type="date" id="region11" onchange="saveDates()">
+            </div>
+            <div class="date-input-group">
+                <label for="region12">Northern Ireland:</label>
+                <input type="date" id="region12" onchange="saveDates()">
             </div>
             
             <div class="date-input-group" style="margin-top: 25px;">
@@ -1009,7 +1017,7 @@
                     if (data.nationalDate) document.getElementById('nationalDate').value = data.nationalDate;
                     
                     // Load regional dates
-                    for (let i = 1; i <= 10; i++) {
+                    for (let i = 1; i <= 12; i++) {
                         const regionKey = 'region' + i;
                         if (data[regionKey]) {
                             document.getElementById(regionKey).value = data[regionKey];
@@ -1034,7 +1042,7 @@
             };
             
             // Add regional dates
-            for (let i = 1; i <= 10; i++) {
+            for (let i = 1; i <= 12; i++) {
                 const regionKey = 'region' + i;
                 const regionValue = document.getElementById(regionKey).value;
                 if (regionValue) {
