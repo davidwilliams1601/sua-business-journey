@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Draft Builder</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .builder-container {
+            display: grid;
+            grid-template-columns: 350px 1fr 400px;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        .templates-panel, .editor-panel, .preview-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .panel-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .event-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .event-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .event-info-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .event-info-value {
+            color: #333;
+        }
+        
+        .template-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .template-item {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .template-item:hover {
+            border-color: #764ba2;
+            background: #f8f9fa;
+        }
+        
+        .template-item.selected {
+            border-color: #764ba2;
+            background: #f3f0ff;
+        }
+        
+        .template-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .template-desc {
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        
+        .form-textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+        
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+        
+        .merge-fields {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .merge-btn {
+            padding: 6px 12px;
+            background: #f3f0ff;
+            color: #764ba2;
+            border: 1px solid #764ba2;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .merge-btn:hover {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a3780;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: #0ea5e9;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #0284c7;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #764ba2;
+            border: 2px solid #764ba2;
+        }
+        
+        .btn-outline:hover {
+            background: #f3f0ff;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .preview-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 300px;
+            white-space: pre-wrap;
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .status-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-pending {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .ai-loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #764ba2;
+            font-weight: 600;
+        }
+        
+        .ai-loading.active {
+            display: block;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.3em;
+        }
+        
+        .draft-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .draft-item {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .draft-item:hover {
+            background: #f8f9fa;
+            border-color: #764ba2;
+        }
+        
+        .draft-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 1200px) {
+            .builder-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">Loading draft builder...</div>
+    
+    <div class="container" id="mainContent" style="display: none;">
+        <a href="calendar.html" class="back-link">← Back to Calendar</a>
+        
+        <div class="header">
+            <h1>📝 Content Draft Builder</h1>
+            <p>Create, enhance, and approve communications for your awards</p>
+        </div>
+        
+        <div class="builder-container">
+            <!-- Left Panel: Templates & Drafts -->
+            <div class="templates-panel">
+                <div class="panel-title">Event Details</div>
+                <div class="event-info" id="eventInfo">
+                    <div class="event-info-item">
+                        <span class="event-info-label">Award:</span>
+                        <span class="event-info-value" id="eventAward">-</span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Date:</span>
+                        <span class="event-info-value" id="eventDate">-</span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Channel:</span>
+                        <span class="event-info-value" id="eventChannel">-</span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="event-info-label">Title:</span>
+                        <span class="event-info-value" id="eventTitle">-</span>
+                    </div>
+                </div>
+                
+                <div class="panel-title">📋 Templates</div>
+                <div class="template-list" id="templateList"></div>
+                
+                <div class="panel-title" style="margin-top: 30px;">💾 Saved Drafts</div>
+                <div class="draft-list" id="draftList"></div>
+            </div>
+            
+            <!-- Middle Panel: Editor -->
+            <div class="editor-panel">
+                <div class="panel-title">✍️ Draft Editor</div>
+                
+                <div id="currentStatus"></div>
+                
+                <div class="form-group">
+                    <label class="form-label">Subject Line / Title</label>
+                    <input type="text" class="form-input" id="draftSubject" placeholder="Enter subject line or post title">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Merge Fields (Click to insert)</label>
+                    <div class="merge-fields">
+                        <button class="merge-btn" onclick="insertMergeField('[COMPANY_NAME]')">Company Name</button>
+                        <button class="merge-btn" onclick="insertMergeField('[CONTACT_NAME]')">Contact Name</button>
+                        <button class="merge-btn" onclick="insertMergeField('[AWARD_NAME]')">Award Name</button>
+                        <button class="merge-btn" onclick="insertMergeField('[REGION]')">Region</button>
+                        <button class="merge-btn" onclick="insertMergeField('[EVENT_DATE]')">Event Date</button>
+                        <button class="merge-btn" onclick="insertMergeField('[DEADLINE]')">Deadline</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-textarea" id="draftContent" placeholder="Write your content here..."></textarea>
+                </div>
+                
+                <div class="ai-loading" id="aiLoading">
+                    🤖 AI is enhancing your content...
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="enhanceWithAI()">✨ Enhance with AI</button>
+                    <button class="btn btn-outline" onclick="saveDraft('draft')">💾 Save Draft</button>
+                    <button class="btn btn-primary" onclick="saveDraft('pending')">📤 Submit for Approval</button>
+                    <button class="btn btn-success" onclick="saveDraft('approved')" id="approveBtn" style="display: none;">✅ Approve</button>
+                </div>
+                
+                <div class="action-buttons" style="margin-top: 10px;">
+                    <button class="btn btn-outline" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+                    <button class="btn btn-outline" onclick="exportDraft()">⬇️ Export</button>
+                    <button class="btn btn-outline" onclick="clearEditor()">🗑️ Clear</button>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Preview -->
+            <div class="preview-panel">
+                <div class="panel-title">👁️ Live Preview</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Preview with personalization:</label>
+                    <input type="text" class="form-input" id="previewCompany" placeholder="Company Name" onkeyup="updatePreview()">
+                    <input type="text" class="form-input" style="margin-top: 10px;" id="previewContact" placeholder="Contact Name" onkeyup="updatePreview()">
+                </div>
+                
+                <div class="preview-content" id="previewContent">
+                    Your content will appear here with merge fields replaced...
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f3f0ff; border-radius: 8px;">
+                    <strong>Character Count:</strong> <span id="charCount">0</span><br>
+                    <strong>Word Count:</strong> <span id="wordCount">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyBR7eBBCds2Qy_YxCmmG60KF0_nax9MZHY",
+          authDomain: "ideas-forums-programme-plan.firebaseapp.com",
+          projectId: "ideas-forums-programme-plan",
+          storageBucket: "ideas-forums-programme-plan.firebasestorage.app",
+          messagingSenderId: "94219941404",
+          appId: "1:94219941404:web:78cc7a290dd99baf0b51d9",
+          measurementId: "G-9D6EGHBXJ6"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        let currentEvent = null;
+        let currentDraftId = null;
+        
+        // Template library
+        const templates = {
+            email_cold_outreach: {
+                name: "Cold Email Outreach",
+                desc: "Initial contact to potential entrants",
+                channel: "email",
+                subject: "Is [COMPANY_NAME] one of the UK's best?",
+                content: `Hi [CONTACT_NAME],
+
+I hope this email finds you well.
+
+I'm reaching out because [COMPANY_NAME] caught our attention as a potential candidate for the [AWARD_NAME].
+
+The [AWARD_NAME] celebrates excellence and innovation across the UK, and we believe your company's achievements deserve recognition.
+
+**Why Enter?**
+• Industry recognition from respected entrepreneurs
+• Extensive media coverage and brand exposure
+• Networking opportunities with fellow innovators
+• Merit-based judging process with full integrity
+
+**Application deadline:** [DEADLINE]
+
+It only takes 15 minutes to submit your application. Would you like to learn more?
+
+Best regards,
+Ideas Forums Team`
+            },
+            email_shortlist: {
+                name: "Shortlist Announcement",
+                desc: "Congratulations on being shortlisted",
+                channel: "email",
+                subject: "Congratulations! [COMPANY_NAME] shortlisted for [AWARD_NAME]",
+                content: `Dear [CONTACT_NAME],
+
+Congratulations! We're thrilled to announce that [COMPANY_NAME] has been shortlisted for the [AWARD_NAME].
+
+This is a significant achievement - you've been selected from hundreds of exceptional applications by our panel of respected industry judges.
+
+**What happens next:**
+• Final event date: [EVENT_DATE]
+• Tickets now available for you and your team
+• Winner announced at the ceremony
+• Exceptional networking opportunities
+
+**Secure your tickets:** [Insert ticket link]
+
+We look forward to celebrating your success at the final event.
+
+Warmest congratulations,
+Ideas Forums Team`
+            },
+            email_pre_event: {
+                name: "Pre-Event Build-Up",
+                desc: "2 weeks before event",
+                channel: "email",
+                subject: "Just 2 weeks until [AWARD_NAME] - [EVENT_DATE]",
+                content: `Hi [CONTACT_NAME],
+
+The countdown is on! Just two weeks until we celebrate the finalists of the [AWARD_NAME] on [EVENT_DATE].
+
+**Event Details:**
+• Date: [EVENT_DATE]
+• Venue: [Insert venue]
+• Dress code: [Insert dress code]
+• Arrival time: [Insert time]
+
+**Meet the Judges:**
+[Insert judge profiles]
+
+**Make the most of your evening:**
+• Network with fellow finalists
+• Connect with our sponsors
+• Share your journey on social media using #[Insert hashtag]
+
+**Tickets:** If you haven't secured your tickets yet, book now: [Insert link]
+
+We can't wait to see you there!
+
+Best regards,
+Ideas Forums Team`
+            },
+            email_winner: {
+                name: "Winner Announcement",
+                desc: "Post-event winner package",
+                channel: "email",
+                subject: "🏆 Congratulations [COMPANY_NAME] - [AWARD_NAME] Winner!",
+                content: `Dear [CONTACT_NAME],
+
+CONGRATULATIONS! [COMPANY_NAME] is officially a winner of the [AWARD_NAME]!
+
+What an incredible achievement - your dedication, innovation, and excellence truly stood out.
+
+**Your Winner Package:**
+• Winner logo and badges (attached)
+• Press release template
+• Professional event photos
+• Trophy delivery details
+• Media opportunities
+
+**Celebrate Your Win:**
+Please share your success! We've created social media assets to help you announce your achievement.
+
+**What's Next:**
+We'd love to feature [COMPANY_NAME] as a case study and explore speaking opportunities for [CONTACT_NAME].
+
+Once again, congratulations on this well-deserved recognition.
+
+Best wishes,
+Ideas Forums Team`
+            },
+            social_linkedin: {
+                name: "LinkedIn Post",
+                desc: "Professional network announcement",
+                channel: "social",
+                subject: "LinkedIn Announcement",
+                content: `🎯 Calling all innovators and entrepreneurs!
+
+The [AWARD_NAME] are now open for entries. If your company has demonstrated exceptional growth and innovation this year, we want to hear from you.
+
+✅ Merit-based judging
+✅ Industry recognition
+✅ Media exposure
+✅ Networking opportunities
+
+Application deadline: [DEADLINE]
+
+Is your business one of the best? Apply now: [Insert link]
+
+#[Insert hashtag] #UKBusiness #Awards #Innovation`
+            },
+            social_twitter: {
+                name: "Twitter/X Post",
+                desc: "Short-form social announcement",
+                channel: "social",
+                subject: "Twitter Post",
+                content: `🏆 [AWARD_NAME] entries are OPEN!
+
+Celebrating UK excellence & innovation
+
+Apply by [DEADLINE]: [link]
+
+#[hashtag] #Awards`
+            },
+            whatsapp_reminder: {
+                name: "WhatsApp Event Reminder",
+                desc: "Friendly last-minute reminder",
+                channel: "whatsapp",
+                subject: "Event Reminder",
+                content: `Hi [CONTACT_NAME]! 👋
+
+Quick reminder about tomorrow's [AWARD_NAME] event:
+
+📅 [EVENT_DATE]
+📍 [Venue]
+⏰ [Time]
+
+Have your tickets ready and we'll see you there!
+
+Any questions? Just reply to this message.
+
+See you tomorrow! 🎉`
+            },
+            call_script: {
+                name: "Personal Call Script",
+                desc: "Talking points for congratulations call",
+                channel: "call",
+                subject: "Call Script",
+                content: `**Call Script: Shortlist Congratulations**
+
+Opening:
+"Hi [CONTACT_NAME], this is [Your Name] from Ideas Forums. Is now a good time to chat briefly?"
+
+Purpose:
+"I wanted to personally congratulate you - [COMPANY_NAME] has been shortlisted for the [AWARD_NAME]!"
+
+Key Points:
+• Express genuine congratulations
+• Explain what being shortlisted means
+• Discuss event details and tickets
+• Answer any questions
+• Explain sponsorship opportunities (if relevant)
+• Emphasize networking value
+
+Closing:
+"We're so excited to celebrate your achievements on [EVENT_DATE]. We'll send a follow-up email with all the details. Congratulations again!"
+
+**Notes:**
+• Keep call friendly and conversational
+• Listen for concerns about ticket cost
+• Emphasize the value and prestige
+• Get confirmation of attendance if possible`
+            }
+        };
+        
+        // Get event details from URL
+        function loadEventDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentEvent = {
+                award: urlParams.get('award') || 'UKSUA',
+                date: urlParams.get('date') || new Date().toISOString().split('T')[0],
+                channel: urlParams.get('channel') || 'email',
+                title: urlParams.get('title') || 'Communication',
+                region: urlParams.get('region') || ''
+            };
+            
+            // Update event info display
+            document.getElementById('eventAward').textContent = currentEvent.award;
+            document.getElementById('eventDate').textContent = new Date(currentEvent.date).toLocaleDateString('en-GB');
+            document.getElementById('eventChannel').textContent = currentEvent.channel.toUpperCase();
+            document.getElementById('eventTitle').textContent = currentEvent.title;
+            
+            // Load templates
+            loadTemplates();
+            loadDrafts();
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+        
+        function loadTemplates() {
+            const templateList = document.getElementById('templateList');
+            templateList.innerHTML = '';
+            
+            // Filter templates by channel
+            Object.keys(templates).forEach(key => {
+                const template = templates[key];
+                if (template.channel === currentEvent.channel || currentEvent.channel === 'all') {
+                    const div = document.createElement('div');
+                    div.className = 'template-item';
+                    div.onclick = () => selectTemplate(key);
+                    div.innerHTML = `
+                        <div class="template-name">${template.name}</div>
+                        <div class="template-desc">${template.desc}</div>
+                    `;
+                    templateList.appendChild(div);
+                }
+            });
+        }
+        
+        function selectTemplate(templateKey) {
+            const template = templates[templateKey];
+            
+            // Highlight selected template
+            document.querySelectorAll('.template-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.target.closest('.template-item').classList.add('selected');
+            
+            // Load template into editor
+            document.getElementById('draftSubject').value = template.subject;
+            document.getElementById('draftContent').value = template.content;
+            
+            updatePreview();
+        }
+        
+        function insertMergeField(field) {
+            const textarea = document.getElementById('draftContent');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            
+            textarea.value = text.substring(0, start) + field + text.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + field.length;
+            
+            updatePreview();
+        }
+        
+        function updatePreview() {
+            const subject = document.getElementById('draftSubject').value;
+            const content = document.getElementById('draftContent').value;
+            const company = document.getElementById('previewCompany').value || '[COMPANY_NAME]';
+            const contact = document.getElementById('previewContact').value || '[CONTACT_NAME]';
+            
+            // Replace merge fields
+            let preview = `Subject: ${subject}\n\n${content}`;
+            preview = preview.replace(/\[COMPANY_NAME\]/g, company);
+            preview = preview.replace(/\[CONTACT_NAME\]/g, contact);
+            preview = preview.replace(/\[AWARD_NAME\]/g, getAwardFullName(currentEvent.award));
+            preview = preview.replace(/\[REGION\]/g, currentEvent.region || 'National');
+            preview = preview.replace(/\[EVENT_DATE\]/g, new Date(currentEvent.date).toLocaleDateString('en-GB', { 
+                weekday: 'long', 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            }));
+            preview = preview.replace(/\[DEADLINE\]/g, 'TBC');
+            
+            document.getElementById('previewContent').textContent = preview;
+            
+            // Update counts
+            document.getElementById('charCount').textContent = content.length;
+            document.getElementById('wordCount').textContent = content.split(/\s+/).filter(word => word.length > 0).length;
+        }
+        
+        function getAwardFullName(code) {
+            const names = {
+                'UKSUA': 'UK StartUp Awards',
+                'GBEA': 'Great British Entrepreneur Awards',
+                'GBIA': 'Great British Industry Awards',
+                'FGI': 'UK Fast Growth Index'
+            };
+            return names[code] || code;
+        }
+        
+        async function enhanceWithAI() {
+            const content = document.getElementById('draftContent').value;
+            
+            if (!content.trim()) {
+                alert('Please enter some content first!');
+                return;
+            }
+            
+            document.getElementById('aiLoading').classList.add('active');
+            
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 2000,
+                        messages: [{
+                            role: 'user',
+                            content: `You are a professional marketing copywriter for an awards organization. Please enhance the following ${currentEvent.channel} communication to make it more engaging, professional, and persuasive while maintaining all merge fields like [COMPANY_NAME], [CONTACT_NAME], etc.
+
+Keep the same structure and tone but improve the language, add impact, and ensure it motivates action.
+
+Original content:
+${content}
+
+Enhanced version:`
+                        }]
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.content && data.content[0] && data.content[0].text) {
+                    document.getElementById('draftContent').value = data.content[0].text;
+                    updatePreview();
+                } else {
+                    alert('AI enhancement unavailable. Please check your API configuration.');
+                }
+                
+            } catch (error) {
+                console.error('AI enhancement error:', error);
+                alert('AI enhancement failed. This feature requires an Anthropic API key configured on your server.');
+            } finally {
+                document.getElementById('aiLoading').classList.remove('active');
+            }
+        }
+        
+        async function saveDraft(status) {
+            const subject = document.getElementById('draftSubject').value;
+            const content = document.getElementById('draftContent').value;
+            
+            if (!subject.trim() || !content.trim()) {
+                alert('Please enter both subject and content!');
+                return;
+            }
+            
+            const draft = {
+                subject: subject,
+                content: content,
+                status: status,
+                award: currentEvent.award,
+                channel: currentEvent.channel,
+                eventDate: currentEvent.date,
+                eventTitle: currentEvent.title,
+                region: currentEvent.region,
+                createdAt: currentDraftId ? null : firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Remove null createdAt if updating
+            if (currentDraftId) {
+                delete draft.createdAt;
+            }
+            
+            try {
+                if (currentDraftId) {
+                    await db.collection('drafts').doc(currentDraftId).update(draft);
+                } else {
+                    const docRef = await db.collection('drafts').add(draft);
+                    currentDraftId = docRef.id;
+                }
+                
+                const statusText = status === 'draft' ? 'saved' : status === 'pending' ? 'submitted for approval' : 'approved';
+                alert(`Draft ${statusText} successfully!`);
+                
+                loadDrafts();
+                updateStatusDisplay(status);
+                
+            } catch (error) {
+                console.error('Error saving draft:', error);
+                alert('Error saving draft. Please try again.');
+            }
+        }
+        
+        function updateStatusDisplay(status) {
+            const statusDiv = document.getElementById('currentStatus');
+            const statusClass = `status-${status}`;
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            statusDiv.innerHTML = `<span class="status-badge ${statusClass}">Status: ${statusText}</span>`;
+            
+            // Show approve button if pending
+            document.getElementById('approveBtn').style.display = status === 'pending' ? 'inline-block' : 'none';
+        }
+        
+        async function loadDrafts() {
+            try {
+                const snapshot = await db.collection('drafts')
+                    .where('award', '==', currentEvent.award)
+                    .where('channel', '==', currentEvent.channel)
+                    .orderBy('updatedAt', 'desc')
+                    .limit(10)
+                    .get();
+                
+                const draftList = document.getElementById('draftList');
+                draftList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    draftList.innerHTML = '<div style="padding: 15px; text-align: center; color: #666;">No saved drafts yet</div>';
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const draft = doc.data();
+                    const div = document.createElement('div');
+                    div.className = 'draft-item';
+                    div.onclick = () => loadDraft(doc.id, draft);
+                    
+                    const statusClass = `status-${draft.status}`;
+                    const date = draft.updatedAt ? draft.updatedAt.toDate().toLocaleDateString('en-GB') : 'Unknown';
+                    
+                    div.innerHTML = `
+                        <div style="font-weight: 600;">${draft.subject}</div>
+                        <div class="draft-meta">
+                            <span class="status-badge ${statusClass}">${draft.status}</span>
+                            <span>${date}</span>
+                        </div>
+                    `;
+                    draftList.appendChild(div);
+                });
+                
+            } catch (error) {
+                console.error('Error loading drafts:', error);
+            }
+        }
+        
+        function loadDraft(draftId, draft) {
+            currentDraftId = draftId;
+            document.getElementById('draftSubject').value = draft.subject;
+            document.getElementById('draftContent').value = draft.content;
+            updateStatusDisplay(draft.status);
+            updatePreview();
+        }
+        
+        function copyToClipboard() {
+            const content = document.getElementById('previewContent').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('Content copied to clipboard!');
+            });
+        }
+        
+        function exportDraft() {
+            const subject = document.getElementById('draftSubject').value;
+            const content = document.getElementById('draftContent').value;
+            
+            const exportContent = `Subject: ${subject}\n\n${content}\n\n---\nAward: ${currentEvent.award}\nChannel: ${currentEvent.channel}\nDate: ${currentEvent.date}`;
+            
+            const blob = new Blob([exportContent], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${currentEvent.award}-${currentEvent.channel}-draft.txt`;
+            link.click();
+        }
+        
+        function clearEditor() {
+            if (confirm('Clear the editor? Unsaved changes will be lost.')) {
+                document.getElementById('draftSubject').value = '';
+                document.getElementById('draftContent').value = '';
+                currentDraftId = null;
+                document.getElementById('currentStatus').innerHTML = '';
+                updatePreview();
+            }
+        }
+        
+        // Initialize
+        loadEventDetails();
+        
+        // Update preview on typing
+        document.getElementById('draftSubject').addEventListener('input', updatePreview);
+        document.getElementById('draftContent').addEventListener('input', updatePreview);
+    </script>
+</body>
+</html>
