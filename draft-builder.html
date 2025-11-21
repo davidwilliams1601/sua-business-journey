@@ -885,8 +885,6 @@ Enhanced version:`
                 const snapshot = await db.collection('drafts')
                     .where('award', '==', currentEvent.award)
                     .where('channel', '==', currentEvent.channel)
-                    .orderBy('updatedAt', 'desc')
-                    .limit(10)
                     .get();
                 
                 const draftList = document.getElementById('draftList');
@@ -897,11 +895,28 @@ Enhanced version:`
                     return;
                 }
                 
+                // Convert to array and sort by updatedAt in JavaScript
+                const drafts = [];
                 snapshot.forEach(doc => {
-                    const draft = doc.data();
+                    drafts.push({
+                        id: doc.id,
+                        data: doc.data()
+                    });
+                });
+                
+                // Sort by updatedAt (most recent first)
+                drafts.sort((a, b) => {
+                    const aTime = a.data.updatedAt ? a.data.updatedAt.toMillis() : 0;
+                    const bTime = b.data.updatedAt ? b.data.updatedAt.toMillis() : 0;
+                    return bTime - aTime;
+                });
+                
+                // Display sorted drafts (limit to 10)
+                drafts.slice(0, 10).forEach(item => {
+                    const draft = item.data;
                     const div = document.createElement('div');
                     div.className = 'draft-item';
-                    div.onclick = () => loadDraft(doc.id, draft);
+                    div.onclick = () => loadDraft(item.id, draft);
                     
                     const statusClass = `status-${draft.status}`;
                     const date = draft.updatedAt ? draft.updatedAt.toDate().toLocaleDateString('en-GB') : 'Unknown';
@@ -918,6 +933,7 @@ Enhanced version:`
                 
             } catch (error) {
                 console.error('Error loading drafts:', error);
+                alert('Error loading drafts: ' + error.message);
             }
         }
         
