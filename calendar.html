@@ -236,14 +236,6 @@
         .event-gbia { background: #f0fdf4; color: #10b981; }
         .event-fgi { background: #fffbeb; color: #f59e0b; }
         
-        .week-view {
-            display: none;
-        }
-        
-        .week-view.active {
-            display: block;
-        }
-        
         .week-grid {
             display: grid;
             grid-template-columns: 100px repeat(7, 1fr);
@@ -420,7 +412,7 @@
         </div>
         
         <!-- Week View -->
-        <div class="calendar-container week-view" id="weekView">
+        <div class="calendar-container hidden" id="weekView">
             <div class="calendar-header">
                 <button class="nav-btn" onclick="changeWeek(-1)">← Previous</button>
                 <div class="month-title" id="weekTitle"></div>
