@@ -489,6 +489,9 @@
                                 <button class="btn btn-hubspot" onclick="openHubSpotConfig()">⚙️ Configure HubSpot</button>
                                 <button class="btn btn-hubspot" onclick="openInHubSpot()">📤 Open in HubSpot</button>
                             </div>
+                            <div style="margin-top: 10px; font-size: 12px;">
+                                <a href="#" onclick="resetHubSpotPortalId(); return false;" style="color: #667eea; text-decoration: underline;">Reset Portal ID</a>
+                            </div>
                         </div>
                         
                         <div class="config-option">
@@ -947,13 +950,41 @@ Ideas Forums Team`
                 return;
             }
             
-            // Create HubSpot email URL with pre-filled content
-            // This opens HubSpot with the content ready to send
-            const hubspotUrl = `https://app.hubspot.com/email/${getHubSpotPortalId()}/create?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(content)}`;
+            // Check if Portal ID is stored
+            let portalId = localStorage.getItem('hubspotPortalId');
             
-            window.open(hubspotUrl, '_blank');
+            if (!portalId) {
+                // Ask for Portal ID
+                portalId = prompt('Enter your HubSpot Portal ID:\n\nFind it in HubSpot:\nSettings (gear icon) → Account Setup → Account Defaults\n\nLook for "Hub ID" - it\'s a number like 12345678\n\nThis will be saved for future use.');
+                
+                if (!portalId) {
+                    // User cancelled - just copy to clipboard and open main HubSpot
+                    const fullContent = `Subject: ${subject}\n\n${content}`;
+                    navigator.clipboard.writeText(fullContent);
+                    window.open('https://app.hubspot.com/', '_blank');
+                    alert('✅ Content copied!\n\nHubSpot opening...\nNavigate to: Marketing → Email → Create email');
+                    return;
+                }
+                
+                // Save for future use
+                localStorage.setItem('hubspotPortalId', portalId);
+                alert('✅ Portal ID saved! You won\'t be asked again.');
+            }
             
-            alert('Opening in HubSpot! Select your list and send when ready.');
+            // Copy content to clipboard
+            const fullContent = `Subject: ${subject}\n\n${content}`;
+            navigator.clipboard.writeText(fullContent).then(() => {
+                // Open HubSpot with Portal ID
+                const hubspotUrl = `https://app.hubspot.com/contacts/${portalId}/marketing-emails`;
+                window.open(hubspotUrl, '_blank');
+                
+                // Show instructions
+                alert('✅ Content copied to clipboard!\n\nHubSpot is opening...\n\nNext steps:\n1. Click "Create email"\n2. Choose "Regular email"\n3. Paste your content (Ctrl+V)\n4. Select your list and send!');
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+                window.open(`https://app.hubspot.com/contacts/${portalId}/marketing-emails`, '_blank');
+                alert('Opening HubSpot! Copy your subject and content manually.');
+            });
         }
         
         // Test HubSpot API connection
@@ -1135,6 +1166,14 @@ Status: Draft created in HubSpot
         window.openInHubSpot = openInHubSpot;
         window.testHubSpotConnection = testHubSpotConnection;
         window.pushToHubSpot = pushToHubSpot;
+        
+        function resetHubSpotPortalId() {
+            if (confirm('Reset stored HubSpot Portal ID?\n\nYou will be asked to enter it again next time you click "Open in HubSpot".')) {
+                localStorage.removeItem('hubspotPortalId');
+                alert('✅ Portal ID cleared! You\'ll be prompted for it on your next send.');
+            }
+        }
+        window.resetHubSpotPortalId = resetHubSpotPortalId;
     </script>
 </body>
 </html>
